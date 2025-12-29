@@ -28,6 +28,8 @@ Developer workflows (commands you should use)
   - `php artisan serve`, `php artisan queue:work --tries=3` (or `php artisan horizon` for Redis/Horizon setups).
 - Tests: `composer test` (runs `php artisan test`). Unit/integration tests are configured to use SQLite in-memory and `QUEUE_CONNECTION=sync` as in `phpunit.xml` — write tests accordingly.
 - Useful composer scripts: `composer setup` (installs deps, migrates, builds assets).
+- CI: a lightweight GitHub Actions workflow was added at `.github/workflows/ci-tests.yml` that runs **Pint** (`vendor/bin/pint --test`) and **tests** (`composer test`). Use it as a reference for CI expectations (PHP 8.2, composer install, pint + phpunit).
+- Tests: a minimal smoke test exists at `tests/Feature/SmokeTest.php` (and a placeholder `tests/Unit/PlaceholderTest.php`) to ensure basic bootstrapping works; expand with unit/integration tests as features are added.
 
 Project-specific conventions & patterns
 --------------------------------------
