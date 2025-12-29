@@ -1,3 +1,10 @@
+<?php
+
+namespace App\Services;
+
+use App\Jobs\SendWebhookJob;
+use App\Models\Webhook;
+
 class WebhookService
 {
     public function trigger(string $event, array $payload)

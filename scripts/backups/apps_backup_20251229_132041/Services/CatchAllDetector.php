@@ -1,3 +1,7 @@
+<?php
+
+namespace App\Services;
+
 class CatchAllDetector
 {
     public function detect(string $domain, array $mxRecords): array
@@ -41,5 +45,10 @@ class CatchAllDetector
             }
         }
         return false;
+    }
+
+    private function generateRandomEmail(string $domain): string
+    {
+        return bin2hex(random_bytes(5)) . '@' . $domain;
     }
 }

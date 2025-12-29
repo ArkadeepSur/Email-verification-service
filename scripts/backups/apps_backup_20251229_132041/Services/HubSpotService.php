@@ -1,3 +1,9 @@
+<?php
+
+namespace App\Services;
+
+use App\Jobs\VerifyBulkEmailsJob;
+
 class HubSpotService
 {
     public function syncContacts(array $filters = [])

@@ -1,6 +1,24 @@
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use App\Services\EmailVerificationService;
+
 class VerifyEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $email;
+
+    public function __construct(string $email)
+    {
+        $this->email = $email;
+    }
 
     public function handle(EmailVerificationService $service)
     {
@@ -37,5 +55,15 @@ class VerifyEmailJob implements ShouldQueue
         
         // 8. Save Result
         $this->saveResult($riskScore, $smtpResult, $isCatchAll);
+    }
+
+    private function markInvalid(string $reason)
+    {
+        // Persist invalid result
+    }
+
+    private function saveResult($riskScore, $smtpResult, $isCatchAll)
+    {
+        // Save verification outcome to DB
     }
 }

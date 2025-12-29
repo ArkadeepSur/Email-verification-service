@@ -1,3 +1,10 @@
+<?php
+
+namespace App\Services;
+
+use Google_Service_Sheets;
+use App\Jobs\VerifyBulkEmailsJob;
+
 class GoogleSheetsService
 {
     public function importEmails(string $spreadsheetId, string $range)

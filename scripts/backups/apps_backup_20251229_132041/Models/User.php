@@ -1,5 +1,18 @@
-class User extends Authenticatable
+<?php
+
+namespace App\Models;
+
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+
+class User extends Authenticatable implements CanResetPasswordContract
 {
+    use HasApiTokens, Notifiable, CanResetPassword;
+
     public function hasCredits(int $required = 1): bool
     {
         return $this->credits_balance >= $required;
