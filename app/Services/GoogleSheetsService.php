@@ -27,4 +27,15 @@ class GoogleSheetsService
     {
         // Write verification results back to sheet
     }
+
+    /**
+     * Return a configured Google client instance or throw if not configured.
+     * Tests may stub this method.
+     *
+     * @return mixed
+     */
+    protected function getGoogleClient()
+    {
+        throw new \RuntimeException('Google client is not configured');
+    }
 }

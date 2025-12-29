@@ -59,11 +59,50 @@ class VerifyEmailJob implements ShouldQueue
 
     private function markInvalid(string $reason)
     {
-        // Persist invalid result
+        $jobId = null;
+        if (isset($this->job) && method_exists($this->job, 'getJobId')) {
+            $jobId = $this->job->getJobId();
+        }
+
+        \App\Models\VerificationResult::create([
+            'email' => $this->email,
+            'status' => 'invalid',
+            'risk_score' => 0,
+            'details' => ['reason' => $reason],
+            'job_id' => $jobId,
+        ]);
     }
 
     private function saveResult($riskScore, $smtpResult, $isCatchAll)
     {
-        // Save verification outcome to DB
+        $jobId = null;
+        if (isset($this->job) && method_exists($this->job, 'getJobId')) {
+            $jobId = $this->job->getJobId();
+        }
+
+        $details = [
+            'smtp' => $smtpResult,
+            'catch_all' => $isCatchAll,
+        ];
+
+        $result = \App\Models\VerificationResult::create([
+            'email' => $this->email,
+            'status' => $riskScore > 0 ? 'ok' : 'invalid',
+            'risk_score' => $riskScore,
+            'details' => $details,
+            'job_id' => $jobId,
+        ]);
+
+        // Fire webhooks (don't let failures break the job)
+        try {
+            app(\App\Services\WebhookService::class)->trigger('verification.completed', [
+                'email' => $this->email,
+                'status' => $result->status,
+                'risk_score' => $riskScore,
+                'id' => $result->id,
+            ]);
+        } catch (\Throwable $ex) {
+            // ignore webhook errors
+        }
     }
 }

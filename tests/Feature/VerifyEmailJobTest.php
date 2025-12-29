@@ -6,10 +6,14 @@ use Tests\TestCase;
 use App\Jobs\VerifyEmailJob;
 use Mockery;
 use App\Services\EmailVerificationService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\VerificationResult;
 
 class VerifyEmailJobTest extends TestCase
 {
-    public function test_handle_calls_service_methods()
+    use RefreshDatabase;
+
+    public function test_handle_persists_result()
     {
         $email = 'user@example.com';
 
@@ -26,11 +30,10 @@ class VerifyEmailJobTest extends TestCase
         $this->app->instance(EmailVerificationService::class, $mock);
 
         $job = new VerifyEmailJob($email);
-        // invoke handle directly (the container will inject the mocked service)
         $job->handle($mock);
 
-        Mockery::close();
+        $this->assertDatabaseHas('verification_results', ['email' => $email, 'risk_score' => 100]);
 
-        $this->assertTrue(true); // if we reach here, interactions succeeded
+        Mockery::close();
     }
 }

@@ -24,12 +24,25 @@ class HubSpotService
     public function updateContactProperties(array $verificationResults)
     {
         // Update HubSpot contact properties with verification status
+        $client = $this->getHubSpotClient();
+
         foreach ($verificationResults as $result) {
-            $this->client->crm()->contacts()->update($result['contact_id'], [
+            $client->crm()->contacts()->update($result['contact_id'], [
                 'email_verified' => $result['status'],
                 'email_risk_score' => $result['risk_score'],
                 'last_verified_at' => now(),
             ]);
         }
+    }
+
+    /**
+     * Return a configured HubSpot client instance or throw if not configured.
+     * Tests may stub this method.
+     *
+     * @return mixed
+     */
+    protected function getHubSpotClient()
+    {
+        throw new \RuntimeException('HubSpot client is not configured');
     }
 }
