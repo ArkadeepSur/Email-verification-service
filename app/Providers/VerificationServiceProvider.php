@@ -2,16 +2,16 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Services\EmailVerificationService;
 use App\Services\CatchAllDetector;
+use App\Services\EmailVerificationService;
+use Illuminate\Support\ServiceProvider;
 
 class VerificationServiceProvider extends ServiceProvider
 {
     public function register()
     {
         $this->app->singleton(EmailVerificationService::class, function ($app) {
-            return new EmailVerificationService(new CatchAllDetector());
+            return new EmailVerificationService(new CatchAllDetector);
         });
     }
 

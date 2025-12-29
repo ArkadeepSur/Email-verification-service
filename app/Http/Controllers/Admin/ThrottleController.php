@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\ThrottleEvent;
+use Illuminate\Http\Request;
 
 class ThrottleController extends Controller
 {
@@ -91,7 +91,7 @@ class ThrottleController extends Controller
             $csv .= sprintf("%s,%s,%s,%s\n", $e->created_at->toDateTimeString(), $e->ip, $e->email, $e->throttle_key);
         }
 
-        $filename = "throttle_events_{$window}_" . now()->format('Ymd_His') . ".csv";
+        $filename = "throttle_events_{$window}_".now()->format('Ymd_His').'.csv';
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
@@ -132,7 +132,9 @@ class ThrottleController extends Controller
 
         $grouped = $events->groupBy(function ($e) use ($groupFormat) {
             return $e->created_at->format($groupFormat);
-        })->map(function ($g) { return $g->count(); });
+        })->map(function ($g) {
+            return $g->count();
+        });
 
         // Prepare labels for the window even if there are no events
         $labels = [];
@@ -155,7 +157,9 @@ class ThrottleController extends Controller
         }
 
         // Top IP summary
-        $byIp = $events->groupBy('ip')->map(function ($g) { return $g->count(); })->sortDesc()->take(10);
+        $byIp = $events->groupBy('ip')->map(function ($g) {
+            return $g->count();
+        })->sortDesc()->take(10);
 
         return response()->json(['labels' => $labels, 'counts' => $counts, 'top_ips' => $byIp]);
     }
@@ -185,14 +189,18 @@ class ThrottleController extends Controller
 
         $total = $query->count();
 
-        $byIp = $query->get()->groupBy('ip')->map(function ($g) { return $g->count(); })->sortDesc()->take(10);
+        $byIp = $query->get()->groupBy('ip')->map(function ($g) {
+            return $g->count();
+        })->sortDesc()->take(10);
 
         $distinctAccounts = $query->distinct('email')->pluck('email')->filter()->unique()->count();
 
         // grouped counts
         $grouped = $query->get()->groupBy(function ($e) use ($groupBy) {
             return $e->created_at->format($groupBy);
-        })->map(function ($g) { return $g->count(); });
+        })->map(function ($g) {
+            return $g->count();
+        });
 
         return response()->json([
             'total_events' => $total,

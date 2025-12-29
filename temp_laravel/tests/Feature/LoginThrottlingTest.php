@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\User;
 
 class LoginThrottlingTest extends TestCase
 {
@@ -20,7 +20,7 @@ class LoginThrottlingTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $resp = $this->post(route('login.attempt'), [
                 'email' => $user->email,
-                'password' => 'wrong-password'
+                'password' => 'wrong-password',
             ]);
 
             // Laravel redirects back with errors on failed attempt
@@ -31,7 +31,7 @@ class LoginThrottlingTest extends TestCase
         // 6th attempt should be throttled (429)
         $throttled = $this->post(route('login.attempt'), [
             'email' => $user->email,
-            'password' => 'wrong-password'
+            'password' => 'wrong-password',
         ]);
 
         $throttled->assertStatus(429);
@@ -47,7 +47,7 @@ class LoginThrottlingTest extends TestCase
         for ($i = 0; $i < 3; $i++) {
             $resp = $this->post(route('login.attempt'), [
                 'email' => $user->email,
-                'password' => 'wrong-password'
+                'password' => 'wrong-password',
             ]);
 
             $resp->assertStatus(302);
@@ -57,7 +57,7 @@ class LoginThrottlingTest extends TestCase
         // Successful login should reset the throttle counter
         $login = $this->post(route('login.attempt'), [
             'email' => $user->email,
-            'password' => 'correct-password'
+            'password' => 'correct-password',
         ]);
         $login->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
@@ -69,7 +69,7 @@ class LoginThrottlingTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $resp = $this->post(route('login.attempt'), [
                 'email' => $user->email,
-                'password' => 'wrong-password'
+                'password' => 'wrong-password',
             ]);
             $resp->assertStatus(302);
             $resp->assertSessionHasErrors(['email']);
@@ -78,7 +78,7 @@ class LoginThrottlingTest extends TestCase
         // 6th attempt should be throttled
         $final = $this->post(route('login.attempt'), [
             'email' => $user->email,
-            'password' => 'wrong-password'
+            'password' => 'wrong-password',
         ]);
         $final->assertStatus(429);
     }

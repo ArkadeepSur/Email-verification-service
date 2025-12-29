@@ -25,7 +25,9 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [App\Http\Controllers\AuthController::class, 'webLogout'])->name('logout')->middleware('auth');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () { return view('dashboard.index'); })->name('dashboard');
+    Route::get('/dashboard', function () {
+        return view('dashboard.index');
+    })->name('dashboard');
     Route::get('/dashboard/tokens', [App\Http\Controllers\TokenController::class, 'index'])->name('tokens.index');
     Route::post('/dashboard/tokens', [App\Http\Controllers\TokenController::class, 'store'])->name('tokens.store');
     Route::delete('/dashboard/tokens/{id}', [App\Http\Controllers\TokenController::class, 'destroy'])->name('tokens.destroy');
@@ -44,8 +46,10 @@ if (env('APP_ENV') === 'local') {
         $user = App\Models\User::where('email', 'admin@example.com')->first();
         if ($user) {
             \Illuminate\Support\Facades\Auth::login($user);
+
             return redirect('/dashboard');
         }
+
         return 'No dev user found';
     });
 }

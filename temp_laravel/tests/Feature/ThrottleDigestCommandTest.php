@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\ThrottleEvent;
+use App\Notifications\ThrottleDigestNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
-use App\Models\ThrottleEvent;
-use App\Notifications\ThrottleDigestNotification;
 
 class ThrottleDigestCommandTest extends TestCase
 {

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Blacklist;
+use Illuminate\Http\Request;
 
 class BlacklistController extends Controller
 {
@@ -16,6 +16,7 @@ class BlacklistController extends Controller
     {
         $data = $request->validate(['pattern' => 'required', 'description' => 'nullable', 'is_active' => 'boolean']);
         $blacklist = Blacklist::create($data);
+
         return response()->json($blacklist, 201);
     }
 
@@ -27,12 +28,14 @@ class BlacklistController extends Controller
     public function update(Request $request, Blacklist $blacklist)
     {
         $blacklist->update($request->only(['pattern', 'description', 'is_active']));
+
         return response()->json($blacklist);
     }
 
     public function destroy(Blacklist $blacklist)
     {
         $blacklist->delete();
+
         return response()->json(null, 204);
     }
 }

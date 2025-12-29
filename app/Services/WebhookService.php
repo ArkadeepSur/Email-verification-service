@@ -12,7 +12,7 @@ class WebhookService
         $webhooks = Webhook::where('event', $event)
             ->where('is_active', true)
             ->get();
-        
+
         foreach ($webhooks as $webhook) {
             dispatch(new SendWebhookJob($webhook->url, $payload, $webhook->secret));
         }

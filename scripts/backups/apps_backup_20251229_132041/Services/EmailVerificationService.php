@@ -29,6 +29,7 @@ class EmailVerificationService
         if (getmxrr($domain, $mx)) {
             return $mx;
         }
+
         return [];
     }
 
@@ -41,6 +42,7 @@ class EmailVerificationService
     public function detectCatchAll(string $email, array $mxRecords): array
     {
         [$user, $domain] = explode('@', $email, 2);
+
         return $this->catchAllDetector->detect($domain, $mxRecords);
     }
 
@@ -53,10 +55,19 @@ class EmailVerificationService
     {
         // Simple scoring placeholder
         $score = 100;
-        if (!$data['smtp']['ok']) $score -= 50;
-        if ($data['catch_all']['is_catch_all']) $score -= 20;
-        if ($data['blacklist']) $score -= 100;
-        if ($data['disposable']) $score -= 50;
+        if (! $data['smtp']['ok']) {
+            $score -= 50;
+        }
+        if ($data['catch_all']['is_catch_all']) {
+            $score -= 20;
+        }
+        if ($data['blacklist']) {
+            $score -= 100;
+        }
+        if ($data['disposable']) {
+            $score -= 50;
+        }
+
         return max(0, $score);
     }
 

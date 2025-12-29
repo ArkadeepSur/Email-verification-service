@@ -2,14 +2,15 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Notification;
 use App\Models\ThrottleEvent;
 use App\Notifications\ThrottleDigestNotification;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Notification;
 
 class SendThrottleDigest extends Command
 {
     protected $signature = 'throttle:send-digest {--window=day : hour|day|week}';
+
     protected $description = 'Send a digest of throttle events to admins';
 
     public function handle()
@@ -17,8 +18,10 @@ class SendThrottleDigest extends Command
         $window = $this->option('window');
 
         switch ($window) {
-            case 'hour': $since = now()->subHour(); break;
-            case 'week': $since = now()->subWeek(); break;
+            case 'hour': $since = now()->subHour();
+                break;
+            case 'week': $since = now()->subWeek();
+                break;
             case 'day':
             default:
                 $since = now()->subDay();
@@ -29,6 +32,7 @@ class SendThrottleDigest extends Command
 
         if ($events->isEmpty()) {
             $this->info('No events in window; nothing to send.');
+
             return 0;
         }
 
@@ -37,13 +41,13 @@ class SendThrottleDigest extends Command
 
         $lines = [];
         $lines[] = "Throttle digest for last {$window} ({$total} events)";
-        $lines[] = "Top IPs:";
+        $lines[] = 'Top IPs:';
         foreach ($byIp as $ip => $count) {
             $lines[] = " - {$ip}: {$count} events";
         }
 
         // Generate CSV attachment temporarily
-        $tmp = sys_get_temp_dir() . '/throttle_digest_' . now()->format('Ymd_His') . '.csv';
+        $tmp = sys_get_temp_dir().'/throttle_digest_'.now()->format('Ymd_His').'.csv';
         $fh = fopen($tmp, 'w');
         fputcsv($fh, ['time', 'ip', 'email', 'key']);
         foreach ($events as $e) {
@@ -59,7 +63,7 @@ class SendThrottleDigest extends Command
         }
 
         // Slack if configured
-        if (!empty(config('admin.slack_webhook'))) {
+        if (! empty(config('admin.slack_webhook'))) {
             Notification::route('slack', config('admin.slack_webhook'))->notify(new ThrottleDigestNotification($payload, $tmp));
         }
 

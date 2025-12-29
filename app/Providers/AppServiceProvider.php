@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Providers\VerificationServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,11 +20,13 @@ class AppServiceProvider extends ServiceProvider
                 $host = config('metrics.statsd.host');
                 $port = config('metrics.statsd.port');
                 $prefix = config('metrics.statsd.prefix', '');
+
                 return new \App\Services\Metrics\StatsdPublisher($host, $port, $prefix);
             }
 
-            return new \App\Services\Metrics\NullPublisher();
-        });    }
+            return new \App\Services\Metrics\NullPublisher;
+        });
+    }
 
     /**
      * Bootstrap any application services.

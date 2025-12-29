@@ -6,6 +6,6 @@ return [
     'statsd' => [
         'host' => env('STATSD_HOST', '127.0.0.1'),
         'port' => env('STATSD_PORT', 8125),
-        'prefix' => env('STATSD_PREFIX', env('APP_NAME') ? Str::slug(env('APP_NAME')) . '.' : ''),
+        'prefix' => env('STATSD_PREFIX', env('APP_NAME') ? Str::slug(env('APP_NAME')).'.' : ''),
     ],
 ];

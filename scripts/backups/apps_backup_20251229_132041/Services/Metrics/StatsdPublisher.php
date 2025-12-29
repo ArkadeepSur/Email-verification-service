@@ -5,7 +5,9 @@ namespace App\Services\Metrics;
 class StatsdPublisher implements MetricsPublisher
 {
     protected string $host;
+
     protected int $port;
+
     protected string $prefix;
 
     public function __construct(string $host, int $port, string $prefix = '')
@@ -28,13 +30,13 @@ class StatsdPublisher implements MetricsPublisher
 
     public function increment(string $metric, int $by = 1): void
     {
-        $msg = sprintf("%s%s:%d|c", $this->prefix, $metric, $by);
+        $msg = sprintf('%s%s:%d|c', $this->prefix, $metric, $by);
         $this->send($msg);
     }
 
     public function gauge(string $metric, $value): void
     {
-        $msg = sprintf("%s%s:%s|g", $this->prefix, $metric, (string) $value);
+        $msg = sprintf('%s%s:%s|g', $this->prefix, $metric, (string) $value);
         $this->send($msg);
     }
 }

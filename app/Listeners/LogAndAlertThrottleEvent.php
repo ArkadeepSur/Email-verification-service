@@ -4,10 +4,9 @@ namespace App\Listeners;
 
 use App\Events\ThrottleOccurred;
 use App\Models\ThrottleEvent;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Log;
 use App\Notifications\AdminAlertNotification;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class LogAndAlertThrottleEvent
 {
@@ -27,7 +26,7 @@ class LogAndAlertThrottleEvent
             $metrics->increment('throttle.lockouts');
         } catch (\Throwable $ex) {
             // ignore metrics errors
-            Log::debug('Metrics publish failed: ' . $ex->getMessage());
+            Log::debug('Metrics publish failed: '.$ex->getMessage());
         }
 
         // Evaluate aggregation thresholds
@@ -49,12 +48,13 @@ class LogAndAlertThrottleEvent
             $subject = "Security Alert: {$distinctEmails->count()} distinct accounts locked from IP {$event->ip}";
             $lines = [
                 "IP: {$event->ip}",
-                "Distinct accounts: " . $distinctEmails->implode(', '),
+                'Distinct accounts: '.$distinctEmails->implode(', '),
                 "Window: last {$windowMinutes} minute(s)",
             ];
 
             $this->notifyAdmins($subject, $lines);
             Log::warning($subject);
+
             return;
         }
 
@@ -69,6 +69,7 @@ class LogAndAlertThrottleEvent
 
             $this->notifyAdmins($subject, $lines);
             Log::warning($subject);
+
             return;
         }
     }
@@ -88,11 +89,11 @@ class LogAndAlertThrottleEvent
             }
 
             // Send Slack if configured
-            if (!empty(config('admin.slack_webhook'))) {
+            if (! empty(config('admin.slack_webhook'))) {
                 Notification::route('slack', config('admin.slack_webhook'))->notify(new AdminAlertNotification($payload));
             }
         } catch (\Exception $ex) {
-            Log::warning('Failed to send admin alert: ' . $ex->getMessage());
+            Log::warning('Failed to send admin alert: '.$ex->getMessage());
         }
     }
 }

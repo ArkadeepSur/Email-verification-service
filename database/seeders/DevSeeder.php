@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class DevSeeder extends Seeder
 {
@@ -15,7 +15,7 @@ class DevSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'password' => Hash::make('password'),
-                'credits_balance' => 1000
+                'credits_balance' => 1000,
             ]
         );
     }

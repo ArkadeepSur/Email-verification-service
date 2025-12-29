@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Cache;
-use Tests\TestCase;
+use App\Events\ThrottleOccurred;
 use App\Models\User;
 use App\Notifications\LockoutNotification;
-use App\Events\ThrottleOccurred;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
+use Tests\TestCase;
 
 class ThrottleNotificationTest extends TestCase
 {
@@ -30,14 +30,14 @@ class ThrottleNotificationTest extends TestCase
         for ($i = 0; $i < 6; $i++) {
             $resp = $this->postJson('/api/auth/login', [
                 'email' => $user->email,
-                'password' => 'wrong'
+                'password' => 'wrong',
             ]);
         }
 
         // 6th response should be throttled
         $this->postJson('/api/auth/login', [
             'email' => $user->email,
-            'password' => 'wrong'
+            'password' => 'wrong',
         ])->assertStatus(429);
 
         // Notification should be sent to the user (LockoutNotification)
@@ -64,7 +64,7 @@ class ThrottleNotificationTest extends TestCase
         for ($i = 0; $i < 7; $i++) {
             $this->postJson('/api/auth/login', [
                 'email' => $user->email,
-                'password' => 'wrong'
+                'password' => 'wrong',
             ]);
         }
 

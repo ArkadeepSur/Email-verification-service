@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Event;
-use Tests\TestCase;
 use App\Events\ThrottleOccurred;
 use App\Notifications\AdminAlertNotification;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
+use Tests\TestCase;
 
 class ThrottleAdminAlertTest extends TestCase
 {
@@ -23,7 +23,7 @@ class ThrottleAdminAlertTest extends TestCase
 
         // Dispatch many throttle occurred events from same IP for distinct emails
         for ($i = 0; $i < 4; $i++) {
-            event(new ThrottleOccurred('key' . $i, 'user' . $i . '@example.com', '9.9.9.9'));
+            event(new ThrottleOccurred('key'.$i, 'user'.$i.'@example.com', '9.9.9.9'));
         }
 
         // The listener should send admin alerts (LogAndAlertThrottleEvent triggers)

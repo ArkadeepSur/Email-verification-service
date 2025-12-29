@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use App\Services\Metrics\StatsdPublisher;
+use Tests\TestCase;
 
 class MetricsPublisherTest extends TestCase
 {

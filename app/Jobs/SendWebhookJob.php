@@ -14,7 +14,9 @@ class SendWebhookJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public string $url;
+
     public array $payload;
+
     public ?string $secret;
 
     public function __construct(string $url, array $payload, ?string $secret = null)

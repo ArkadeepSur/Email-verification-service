@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\ThrottleEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\ThrottleEvent;
 
 class AggregatedMetricsTest extends TestCase
 {

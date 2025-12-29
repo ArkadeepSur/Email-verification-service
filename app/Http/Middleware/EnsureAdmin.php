@@ -12,7 +12,7 @@ class EnsureAdmin
         $user = Auth::user();
         $adminEmails = config('admin.emails', []);
 
-        if (!$user || !in_array($user->email, $adminEmails)) {
+        if (! $user || ! in_array($user->email, $adminEmails)) {
             abort(403, 'Forbidden');
         }
 

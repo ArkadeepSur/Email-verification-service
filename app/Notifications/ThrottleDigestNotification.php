@@ -3,15 +3,16 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Messages\SlackMessage;
+use Illuminate\Notifications\Notification;
 
 class ThrottleDigestNotification extends Notification
 {
     use Queueable;
 
     public array $payload;
+
     public ?string $csvPath;
 
     public function __construct(array $payload, ?string $csvPath = null)
@@ -23,7 +24,7 @@ class ThrottleDigestNotification extends Notification
     public function via($notifiable)
     {
         $channels = ['mail'];
-        if (!empty(config('admin.slack_webhook'))) {
+        if (! empty(config('admin.slack_webhook'))) {
             $channels[] = 'slack';
         }
 
@@ -48,12 +49,13 @@ class ThrottleDigestNotification extends Notification
 
     public function toSlack($notifiable)
     {
-        if (!class_exists(SlackMessage::class)) {
+        if (! class_exists(SlackMessage::class)) {
             return null;
         }
 
         $msg = (new SlackMessage)->from(config('app.name'));
-        $msg->content(($this->payload['subject'] ?? 'Throttle digest') . "\n" . implode("\n", ($this->payload['lines'] ?? [])));
+        $msg->content(($this->payload['subject'] ?? 'Throttle digest')."\n".implode("\n", ($this->payload['lines'] ?? [])));
+
         return $msg;
     }
 }

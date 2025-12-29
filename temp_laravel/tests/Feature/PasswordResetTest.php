@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Auth\Notifications\ResetPassword;
-use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
@@ -17,7 +17,7 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = new User();
+        $user = new User;
         $user->name = 'Reset User';
         $user->email = 'reset@example.com';
         $user->password = Hash::make('oldpassword');

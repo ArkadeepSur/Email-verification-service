@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
-use App\Models\User;
 
 class ThrottleBehaviorTest extends TestCase
 {
@@ -20,27 +20,27 @@ class ThrottleBehaviorTest extends TestCase
         // Use IP 1
         for ($i = 0; $i < 5; $i++) {
             $resp = $this->withServerVariables(['REMOTE_ADDR' => '1.2.3.4'])
-                        ->post(route('login.attempt'), [
-                            'email' => $user->email,
-                            'password' => 'wrong',
-                        ]);
+                ->post(route('login.attempt'), [
+                    'email' => $user->email,
+                    'password' => 'wrong',
+                ]);
             $resp->assertStatus(302)->assertSessionHasErrors(['email']);
         }
 
         // 6th from same IP should be throttled
         $throttled = $this->withServerVariables(['REMOTE_ADDR' => '1.2.3.4'])
-                          ->post(route('login.attempt'), [
-                              'email' => $user->email,
-                              'password' => 'wrong',
-                          ]);
+            ->post(route('login.attempt'), [
+                'email' => $user->email,
+                'password' => 'wrong',
+            ]);
         $throttled->assertStatus(429);
 
         // Same email but different IP should NOT be throttled
         $respDifferentIp = $this->withServerVariables(['REMOTE_ADDR' => '5.6.7.8'])
-                                ->post(route('login.attempt'), [
-                                    'email' => $user->email,
-                                    'password' => 'wrong',
-                                ]);
+            ->post(route('login.attempt'), [
+                'email' => $user->email,
+                'password' => 'wrong',
+            ]);
         $respDifferentIp->assertStatus(302)->assertSessionHasErrors(['email']);
     }
 

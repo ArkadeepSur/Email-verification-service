@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
 
 class ApiAuthTest extends TestCase
 {
@@ -28,10 +28,10 @@ class ApiAuthTest extends TestCase
         $token = $response->json('token');
 
         $protected = $this->withHeader('Authorization', 'Bearer '.$token)
-                          ->getJson('/api/credits/balance');
+            ->getJson('/api/credits/balance');
 
         $protected->assertStatus(200)
-                  ->assertJson(['balance' => $user->fresh()->credits_balance]);
+            ->assertJson(['balance' => $user->fresh()->credits_balance]);
     }
 
     public function test_api_login_rejects_invalid_credentials()

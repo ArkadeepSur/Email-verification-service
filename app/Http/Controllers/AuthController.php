@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\RateLimiter;
-use App\Models\User;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -17,17 +17,17 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         $user = Auth::user();
 
         // Clear the rate limiter for this email+IP key on successful login
-        $key = Str::lower($request->input('email')) . '|' . $request->ip();
+        $key = Str::lower($request->input('email')).'|'.$request->ip();
         RateLimiter::clear($key);
 
         // Create token
@@ -47,10 +47,10 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($credentials, $request->filled('remember'))) {
+        if (! Auth::attempt($credentials, $request->filled('remember'))) {
             return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
         }
 
@@ -81,7 +81,8 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
-        return redirect()->intended(route('dashboard'))->with('success', 'Welcome, ' . $user->name . '!');
+
+        return redirect()->intended(route('dashboard'))->with('success', 'Welcome, '.$user->name.'!');
     }
 
     // Password reset: show request form
@@ -116,9 +117,9 @@ class AuthController extends Controller
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) use ($request) {
+            function ($user, $password) {
                 $user->forceFill([
-                    'password' => Hash::make($password)
+                    'password' => Hash::make($password),
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();

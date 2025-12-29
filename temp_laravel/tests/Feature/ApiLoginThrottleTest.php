@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
-use App\Models\User;
 
 class ApiLoginThrottleTest extends TestCase
 {
@@ -22,7 +21,7 @@ class ApiLoginThrottleTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $resp = $this->postJson('/api/auth/login', [
                 'email' => $user->email,
-                'password' => 'wrong'
+                'password' => 'wrong',
             ]);
 
             $resp->assertStatus(401);
@@ -31,7 +30,7 @@ class ApiLoginThrottleTest extends TestCase
         // 6th should be throttled
         $throttled = $this->postJson('/api/auth/login', [
             'email' => $user->email,
-            'password' => 'wrong'
+            'password' => 'wrong',
         ]);
 
         $throttled->assertStatus(429);
@@ -47,7 +46,7 @@ class ApiLoginThrottleTest extends TestCase
         for ($i = 0; $i < 3; $i++) {
             $resp = $this->postJson('/api/auth/login', [
                 'email' => $user->email,
-                'password' => 'wrong'
+                'password' => 'wrong',
             ]);
             $resp->assertStatus(401);
         }
@@ -55,7 +54,7 @@ class ApiLoginThrottleTest extends TestCase
         // Successful login
         $ok = $this->postJson('/api/auth/login', [
             'email' => $user->email,
-            'password' => 'password123'
+            'password' => 'password123',
         ]);
         $ok->assertStatus(200);
         $this->assertArrayHasKey('token', $ok->json());
@@ -64,7 +63,7 @@ class ApiLoginThrottleTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $resp = $this->postJson('/api/auth/login', [
                 'email' => $user->email,
-                'password' => 'wrong'
+                'password' => 'wrong',
             ]);
             $resp->assertStatus(401);
         }
@@ -72,7 +71,7 @@ class ApiLoginThrottleTest extends TestCase
         // 6th should be throttled
         $throttled = $this->postJson('/api/auth/login', [
             'email' => $user->email,
-            'password' => 'wrong'
+            'password' => 'wrong',
         ]);
         $throttled->assertStatus(429);
     }
