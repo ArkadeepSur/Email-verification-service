@@ -1,0 +1,13 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
+parameters:
+    level: 1
+    paths:
+        - app
+        - database
+        - routes
+    inferPrivatePropertyTypeFromConstructor: true
+    baseline: phpstan-baseline.neon
+
+services: []
