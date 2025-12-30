@@ -16,9 +16,9 @@ class HubSpotService
         // Extract emails and verify
         $emails = collect($contacts)->pluck('properties.email')->filter();
 
-        $job = VerifyBulkEmailsJob::dispatch($emails->toArray());
+        VerifyBulkEmailsJob::dispatch($emails->toArray());
 
-        return $job->id;
+        return true;
     }
 
     public function updateContactProperties(array $verificationResults)

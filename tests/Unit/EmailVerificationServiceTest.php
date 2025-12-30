@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use App\Services\EmailVerificationService;
+use Tests\TestCase;
 
 class EmailVerificationServiceTest extends TestCase
 {

@@ -11,8 +11,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $throttle_key
  * @property string $email
  * @property string $ip
+ *
  * @method static self create(array $attributes = [])
- * @method static \Illuminate\Database\Eloquent\Builder|ThrottleEvent where(string $column, $value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ThrottleEvent where(string $column, string $operator = null, $value = null)
  */
 class ThrottleEvent extends Model
 {

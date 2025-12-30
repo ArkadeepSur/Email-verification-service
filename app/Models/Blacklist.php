@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $pattern
  * @property bool $is_active
- * @method static \Illuminate\Database\Eloquent\Builder|Blacklist where(string $column, $value)
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|Blacklist where(string $column, string $operator = null, $value = null)
  * @method static self create(array $attributes = [])
  */
 class Blacklist extends Model

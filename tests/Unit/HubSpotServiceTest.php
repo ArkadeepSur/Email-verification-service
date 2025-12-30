@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Support\Facades\Bus;
 use App\Jobs\VerifyBulkEmailsJob;
+use Illuminate\Support\Facades\Bus;
 use Mockery;
+use Tests\TestCase;
 
 class HubSpotServiceTest extends TestCase
 {
@@ -18,12 +18,32 @@ class HubSpotServiceTest extends TestCase
         $fakeContact1 = (object) ['properties' => (object) ['email' => 'user1@example.com']];
         $fakeContact2 = (object) ['properties' => (object) ['email' => 'user2@example.com']];
 
-        $fakeClient = new class($fakeContact1, $fakeContact2) {
-            private $c1; private $c2;
-            public function __construct($c1, $c2) { $this->c1 = $c1; $this->c2 = $c2; }
-            public function crm() { return $this; }
-            public function contacts() { return $this; }
-            public function getAll() { return [$this->c1, $this->c2]; }
+        $fakeClient = new class($fakeContact1, $fakeContact2)
+        {
+            private $c1;
+
+            private $c2;
+
+            public function __construct($c1, $c2)
+            {
+                $this->c1 = $c1;
+                $this->c2 = $c2;
+            }
+
+            public function crm()
+            {
+                return $this;
+            }
+
+            public function contacts()
+            {
+                return $this;
+            }
+
+            public function getAll()
+            {
+                return [$this->c1, $this->c2];
+            }
         };
 
         $serviceMock->shouldAllowMockingProtectedMethods()

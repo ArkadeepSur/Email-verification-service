@@ -12,8 +12,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $status
  * @property int $risk_score
  * @property array $details
+ *
  * @method static self create(array $attributes = [])
- * @method static \Illuminate\Database\Eloquent\Builder|VerificationResult where(string $column, $value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VerificationResult where(string $column, string $operator = null, $value = null)
  */
 class VerificationResult extends Model
 {

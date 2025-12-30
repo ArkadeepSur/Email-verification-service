@@ -8,6 +8,5 @@ parameters:
         - database
         - routes
     inferPrivatePropertyTypeFromConstructor: true
-    baseline: phpstan-baseline.neon
 
 services: []

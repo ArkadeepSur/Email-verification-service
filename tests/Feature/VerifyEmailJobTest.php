@@ -2,12 +2,11 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Jobs\VerifyEmailJob;
-use Mockery;
 use App\Services\EmailVerificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\VerificationResult;
+use Mockery;
+use Tests\TestCase;
 
 class VerifyEmailJobTest extends TestCase
 {

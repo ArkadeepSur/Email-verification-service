@@ -15,7 +15,9 @@ use Laravel\Sanctum\HasApiTokens;
  * @property int $id
  * @property string $email
  * @property int $credits_balance
- * @method static \Illuminate\Database\Eloquent\Builder|User where(string $column, $value)
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|User where(string $column, string $operator = null, $value = null)
+ * @method static self create(array $attributes = [])
  * @method static self firstOrCreate(array $attributes, array $values = [])
  */
 class User extends Authenticatable implements CanResetPasswordContract
