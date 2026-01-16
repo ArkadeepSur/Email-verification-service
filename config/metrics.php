@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Str;
+
 return [
     'driver' => env('METRICS_DRIVER', 'null'), // supported: null, statsd
 
