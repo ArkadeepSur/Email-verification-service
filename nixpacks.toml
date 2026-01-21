@@ -1,8 +1,20 @@
+providers = ["php"]
+
+[phases.install]
+cmds = [
+  "composer install --no-interaction --prefer-dist --optimize-autoloader"
+]
+
 [phases.build]
 cmds = [
-  "composer install --no-interaction --prefer-dist --optimize-autoloader",
   "php artisan key:generate --force",
-  "php artisan migrate --force",
+  "php artisan config:clear",
   "php artisan config:cache",
   "php artisan route:cache"
 ]
+
+[phases.release]
+cmds = []
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
