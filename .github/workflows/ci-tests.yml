@@ -35,4 +35,4 @@ jobs:
         run: vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G || true
 
       - name: Run tests
-        run: composer test -- --colors=never
+        run: composer test
