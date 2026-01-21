@@ -14,7 +14,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.5'
           extensions: mbstring, intl, pcntl, bcmath
 
       - name: Cache Composer dependencies
@@ -35,4 +35,4 @@ jobs:
         run: vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G || true
 
       - name: Run tests
-        run: composer test -- --colors=never
+        run: composer test
