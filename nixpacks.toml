@@ -1,7 +1,7 @@
 providers = ["php"]
 
 [variables]
-NIXPACKS_LARAVEL_SKIP_OPTIMIZATION = "1"
+NIXPACKS_LARAVEL_SKIP_OPTIMIZATIONS = "true"
 
 [phases.install]
 cmds = [
@@ -15,9 +15,6 @@ cmds = [
   "php artisan config:cache",
   "php artisan route:cache"
 ]
-
-[phases.release]
-cmds = []
 
 [start]
 cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
