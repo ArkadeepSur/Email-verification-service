@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property int|null $user_id
+ * @property int|null $job_id
  * @property string $email
  * @property string $status
  * @property int $risk_score

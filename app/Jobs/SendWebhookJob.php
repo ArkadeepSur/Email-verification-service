@@ -16,7 +16,10 @@ class SendWebhookJob implements ShouldQueue
 
     public int $tries = 3;
 
-    public int $backoff = 60; // 1 minute initial backoff
+    public function backoff(): int
+    {
+        return (int) (60 * pow(2, $this->attempts() - 1));
+    }
 
     public function __construct(
         public string $url,

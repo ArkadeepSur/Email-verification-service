@@ -39,7 +39,7 @@ class VerificationPipelineTest extends TestCase
         $job = new VerifyEmailJob($user->id, $email);
         $job->handle();
 
-        // Assert DB record exists
+        // Assert DB record exists with user_id
         $this->assertDatabaseHas('verification_results', [
             'user_id' => $user->id,
             'email' => $email,
@@ -47,6 +47,8 @@ class VerificationPipelineTest extends TestCase
 
         $result = VerificationResult::where('email', $email)->first();
 
+        // Check details array for verification flags
+        $this->assertIsArray($result->details);
         $this->assertNotNull($result->syntax_valid);
         $this->assertNotNull($result->smtp);
         $this->assertNotNull($result->catch_all);

@@ -2,22 +2,19 @@
 
 namespace App\Services;
 
+use App\Config\RetryConfig;
 use App\Jobs\VerifyBulkEmailsJob;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class HubSpotService
 {
-    private const MAX_RETRIES = 3;
-
-    private const RETRY_DELAY = 2; // seconds
-
     public function syncContacts(array $filters = [], ?int $userId = null)
     {
         $userId = $userId ?? Auth::id();
         $attempt = 0;
 
-        while ($attempt < self::MAX_RETRIES) {
+        while ($attempt < RetryConfig::MAX_RETRIES) {
             try {
                 $client = $this->getHubSpotClient();
 
@@ -43,12 +40,12 @@ class HubSpotService
                 $attempt++;
                 Log::warning('HubSpot sync failed', [
                     'attempt' => $attempt,
-                    'max_retries' => self::MAX_RETRIES,
+                    'max_retries' => RetryConfig::MAX_RETRIES,
                     'error' => $e->getMessage(),
                 ]);
 
-                if ($attempt < self::MAX_RETRIES) {
-                    sleep(self::RETRY_DELAY * pow(2, $attempt - 1));
+                if ($attempt < RetryConfig::MAX_RETRIES) {
+                    sleep(RetryConfig::getBackoffDelay($attempt));
                 } else {
                     Log::error('HubSpot sync failed after max retries', [
                         'error' => $e->getMessage(),

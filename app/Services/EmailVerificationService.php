@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Services\Traits\SmtpSocketTrait;
 use Illuminate\Support\Facades\Log;
 
 class EmailVerificationService
 {
+    use SmtpSocketTrait;
+
     protected CatchAllDetector $catchAllDetector;
 
     public function __construct(CatchAllDetector $catchAllDetector)
@@ -51,7 +54,8 @@ class EmailVerificationService
     {
         [$local, $domain] = explode('@', $email);
 
-        $records = dns_get_record($domain, DNS_MX);
+        // Normalize mxRecords: handle both getmxrr (string array) and dns_get_record (assoc array) formats
+        $records = $this->normalizeMxRecords($mxRecords);
         if (empty($records)) {
             return [
                 'smtp' => 'invalid',
@@ -59,7 +63,7 @@ class EmailVerificationService
             ];
         }
 
-        usort($records, fn ($a, $b) => $a['pri'] <=> $b['pri']);
+        usort($records, fn ($a, $b) => ($a['pri'] ?? 0) <=> ($b['pri'] ?? 0));
 
         foreach ($records as $mx) {
             $host = $mx['target'];
@@ -199,21 +203,25 @@ class EmailVerificationService
         return in_array($domain, $disposableDomains, true);
     }
 
-    private function write($socket, string $command): void
+    /**
+     * Normalize MX records to consistent format with 'target' and 'pri' keys.
+     */
+    private function normalizeMxRecords(array $records): array
     {
-        fwrite($socket, $command."\r\n");
-    }
-
-    private function read($socket): string
-    {
-        $response = '';
-        while ($line = fgets($socket, 515)) {
-            $response .= $line;
-            if (preg_match('/^\d{3}\s/', $line)) {
-                break;
-            }
+        if (empty($records)) {
+            return [];
         }
 
-        return trim($response);
+        // Check if records are already in dns_get_record format (associative arrays with 'target')
+        $firstRecord = reset($records);
+        if (is_array($firstRecord) && isset($firstRecord['target'])) {
+            return $records; // Already normalized
+        }
+
+        // Convert getmxrr format (array of hostnames) to normalized format
+        return array_map(fn ($host, $priority) => [
+            'target' => $host,
+            'pri' => $priority,
+        ], $records, array_keys($records));
     }
 }

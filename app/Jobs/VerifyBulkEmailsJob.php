@@ -53,7 +53,7 @@ class VerifyBulkEmailsJob implements ShouldQueue
             Log::debug('Bulk verification progress', [
                 'processed' => $processedEmails,
                 'total' => $totalEmails,
-                'percentage' => round(($processedEmails / $totalEmails) * 100, 2),
+                'percentage' => $totalEmails > 0 ? round(($processedEmails / $totalEmails) * 100, 2) : 0,
             ]);
         }
 

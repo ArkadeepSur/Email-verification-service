@@ -2,22 +2,21 @@
 
 namespace App\Services;
 
+use App\Config\RetryConfig;
 use App\Jobs\VerifyBulkEmailsJob;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class GoogleSheetsService
 {
-    private const MAX_RETRIES = 3;
-
-    private const RETRY_DELAY = 2; // seconds
-
-    public function importEmails(string $spreadsheetId, string $range, ?int $userId = null)
+    public function importEmails(string $spreadsheetId, string $range, int $userId)
     {
-        $userId = $userId ?? Auth::id();
+        if ($userId <= 0) {
+            throw new \InvalidArgumentException('User ID must be a positive integer');
+        }
+
         $attempt = 0;
 
-        while ($attempt < self::MAX_RETRIES) {
+        while ($attempt < RetryConfig::MAX_RETRIES) {
             try {
                 $client = $this->getGoogleClient();
 
@@ -51,12 +50,12 @@ class GoogleSheetsService
                 Log::warning('Google Sheets import failed', [
                     'spreadsheet_id' => $spreadsheetId,
                     'attempt' => $attempt,
-                    'max_retries' => self::MAX_RETRIES,
+                    'max_retries' => RetryConfig::MAX_RETRIES,
                     'error' => $e->getMessage(),
                 ]);
 
-                if ($attempt < self::MAX_RETRIES) {
-                    sleep(self::RETRY_DELAY * pow(2, $attempt - 1));
+                if ($attempt < RetryConfig::MAX_RETRIES) {
+                    sleep(RetryConfig::getBackoffDelay($attempt));
                 } else {
                     Log::error('Google Sheets import failed after max retries', [
                         'spreadsheet_id' => $spreadsheetId,
@@ -70,18 +69,77 @@ class GoogleSheetsService
 
     public function exportResults(string $spreadsheetId, array $results)
     {
-        // Write verification results back to sheet
         try {
             Log::info('Google Sheets export started', [
                 'spreadsheet_id' => $spreadsheetId,
                 'result_count' => count($results),
             ]);
 
-            // TODO: Implement actual export logic
+            if (empty($results)) {
+                Log::info('Google Sheets export completed (no results)', [
+                    'spreadsheet_id' => $spreadsheetId,
+                ]);
 
-            Log::info('Google Sheets export completed', [
-                'spreadsheet_id' => $spreadsheetId,
-            ]);
+                return true;
+            }
+
+            $client = $this->getGoogleClient();
+
+            if (class_exists('\Google_Service_Sheets')) {
+                $service = new \Google_Service_Sheets($client);
+            } elseif (is_object($client) && property_exists($client, 'spreadsheets_values')) {
+                $service = $client;
+            } else {
+                throw new \RuntimeException('Google Sheets client is not available');
+            }
+
+            // Transform results into sheet row format
+            $rows = [['Email', 'Status', 'Risk Score', 'SMTP', 'Catch All', 'Disposable']];
+            foreach ($results as $result) {
+                $rows[] = [
+                    $result['email'] ?? '',
+                    $result['status'] ?? '',
+                    $result['risk_score'] ?? 0,
+                    $result['smtp'] ?? '',
+                    $result['catch_all'] ? 'Yes' : 'No',
+                    $result['disposable'] ? 'Yes' : 'No',
+                ];
+            }
+
+            $body = new \Google_Service_Sheets_ValueRange;
+            $body->setValues($rows);
+
+            $attempt = 0;
+            while ($attempt < RetryConfig::MAX_RETRIES) {
+                try {
+                    $service->spreadsheets_values->update(
+                        $spreadsheetId,
+                        'Results!A1',
+                        $body,
+                        ['valueInputOption' => 'RAW']
+                    );
+
+                    Log::info('Google Sheets export completed', [
+                        'spreadsheet_id' => $spreadsheetId,
+                        'rows_written' => count($rows),
+                    ]);
+
+                    return true;
+                } catch (\Throwable $e) {
+                    $attempt++;
+                    Log::warning('Google Sheets export attempt failed', [
+                        'spreadsheet_id' => $spreadsheetId,
+                        'attempt' => $attempt,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    if ($attempt < RetryConfig::MAX_RETRIES) {
+                        sleep(RetryConfig::getBackoffDelay($attempt));
+                    } else {
+                        throw $e;
+                    }
+                }
+            }
         } catch (\Throwable $e) {
             Log::error('Google Sheets export failed', [
                 'spreadsheet_id' => $spreadsheetId,

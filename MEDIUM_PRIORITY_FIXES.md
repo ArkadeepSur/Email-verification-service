@@ -88,7 +88,7 @@ private const DELAY_BETWEEN_CHUNKS = 5;   // seconds between batches
 ```php
 - Max retries: 3
 - Backoff: 2s * 2^(attempt-1)
-- Throws on final failure (5 seconds total)
+- Throws on final failure (14 seconds total delay)
 ```
 
 ---

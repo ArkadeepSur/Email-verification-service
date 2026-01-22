@@ -62,10 +62,15 @@ class WebhookController extends Controller
                 return false;
             }
 
-            // Check for private IP ranges
-            if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-                return false;
+            // Check for private IP ranges only if $host is actually an IP address
+            $ipValidation = filter_var($host, FILTER_VALIDATE_IP);
+            if ($ipValidation !== false) {
+                // It's an IP address, check if it's private/reserved
+                if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                    return false;
+                }
             }
+            // If it's a domain name (not an IP), allow it to continue
         }
 
         return true;
