@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::createIfNotExists('credit_transactions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('type', ['debit', 'credit']);
-            $table->integer('amount');
-            $table->integer('balance_after');
-            $table->string('description')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('credit_transactions')) {
+            Schema::create('credit_transactions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->enum('type', ['debit', 'credit']);
+                $table->integer('amount');
+                $table->integer('balance_after');
+                $table->string('description')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down()
