@@ -1,8 +1,7 @@
 parameters:
-    excludePaths:
-        - %currentWorkingDirectory%/vendor
-        - %currentWorkingDirectory%/storage
-        - %currentWorkingDirectory%/scripts/backups
-        - %currentWorkingDirectory%/temp_laravel
-    # baseline created to suppress current findings; regenerate as needed
-    # (auto-generated placeholder)
+    ignoreErrors:
+        -
+            message: '#Instantiated class Google_Service_Sheets_ValueRange not found#'
+            path: app/Services/GoogleSheetsService.php
+
+

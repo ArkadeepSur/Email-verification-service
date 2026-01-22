@@ -2,8 +2,13 @@
 
 namespace App\Services;
 
+use App\Services\Traits\SmtpSocketTrait;
+use Illuminate\Support\Facades\Log;
+
 class EmailVerificationService
 {
+    use SmtpSocketTrait;
+
     protected CatchAllDetector $catchAllDetector;
 
     public function __construct(CatchAllDetector $catchAllDetector)
@@ -13,7 +18,19 @@ class EmailVerificationService
 
     public function precheck(string $email): array
     {
-        // Placeholder for DNS, disposable checks etc.
+        // Quick DNS validation for domain existence
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['ok' => false, 'reason' => 'Invalid email format'];
+        }
+
+        [, $domain] = explode('@', $email, 2);
+
+        // Check basic DNS records for domain
+        $records = dns_get_record($domain, DNS_ANY);
+        if (empty($records)) {
+            return ['ok' => false, 'reason' => 'Domain has no DNS records'];
+        }
+
         return ['ok' => true];
     }
 
@@ -24,10 +41,15 @@ class EmailVerificationService
 
     public function checkMXRecords(string $email): array
     {
-        [$user, $domain] = explode('@', $email, 2);
-        $mx = [];
-        if (getmxrr($domain, $mx)) {
-            return $mx;
+        [, $domain] = explode('@', $email, 2);
+        $hosts = [];
+        $weights = [];
+        if (getmxrr($domain, $hosts, $weights)) {
+            // Normalize to associative format with 'target' and 'pri' keys
+            return array_map(fn ($host, $weight) => [
+                'target' => $host,
+                'pri' => (int) $weight,
+            ], $hosts, $weights);
         }
 
         return [];
@@ -35,15 +57,89 @@ class EmailVerificationService
 
     public function verifySMTP(string $email, array $mxRecords): array
     {
-        // Lightweight placeholder
-        return ['ok' => true];
+        // Normalize mxRecords: handle both getmxrr (string array) and dns_get_record (assoc array) formats
+        $records = $this->normalizeMxRecords($mxRecords);
+        if (empty($records)) {
+            return [
+                'smtp' => 'invalid',
+                'reason' => 'No MX records found',
+            ];
+        }
+
+        usort($records, fn ($a, $b) => ($a['pri'] ?? 0) <=> ($b['pri'] ?? 0));
+
+        foreach ($records as $mx) {
+            $host = $mx['target'];
+            $errno = 0;
+            $errstr = '';
+            $socket = null;
+
+            try {
+                $socket = fsockopen($host, 25, $errno, $errstr, 10);
+                if (! $socket) {
+                    Log::debug('Failed to connect to SMTP server', [
+                        'host' => $host,
+                        'error' => $errstr,
+                    ]);
+
+                    continue;
+                }
+
+                stream_set_timeout($socket, 10);
+
+                $this->read($socket); // banner
+
+                $this->write($socket, 'EHLO verifier.local');
+                $this->read($socket);
+
+                $this->write($socket, 'MAIL FROM:<verify@verifier.local>');
+                $this->read($socket);
+
+                $this->write($socket, "RCPT TO:<{$email}>");
+                $response = $this->read($socket);
+
+                $this->write($socket, 'QUIT');
+
+                if (str_starts_with($response, '250')) {
+                    return [
+                        'smtp' => 'valid',
+                        'reason' => 'Mailbox accepted',
+                    ];
+                }
+
+                if (str_starts_with($response, '550')) {
+                    return [
+                        'smtp' => 'invalid',
+                        'reason' => 'Mailbox rejected',
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::debug('SMTP verification error', [
+                    'host' => $host,
+                    'error' => $e->getMessage(),
+                ]);
+
+                continue;
+            } finally {
+                if ($socket) {
+                    fclose($socket);
+                }
+            }
+        }
+
+        return [
+            'smtp' => 'unknown',
+            'reason' => 'SMTP verification inconclusive',
+        ];
     }
 
-    public function detectCatchAll(string $email, array $mxRecords): array
+    public function detectCatchAll(string $email, array $mxRecords): bool
     {
         [$user, $domain] = explode('@', $email, 2);
 
-        return $this->catchAllDetector->detect($domain, $mxRecords);
+        $result = $this->catchAllDetector->detect($domain, $mxRecords);
+
+        return $result['is_catch_all'] ?? false;
     }
 
     public function checkBlacklist(string $email): bool
@@ -53,18 +149,36 @@ class EmailVerificationService
 
     public function calculateRiskScore(array $data): int
     {
-        // Simple scoring placeholder
+        // Start with maximum score
         $score = 100;
-        if (! $data['smtp']['ok']) {
+
+        // Check SMTP result
+        $smtpResult = $data['smtp'] ?? [];
+        if (is_array($smtpResult)) {
+            if (! ($smtpResult['ok'] ?? true)) {
+                $score -= 50;
+            }
+        } elseif ($smtpResult !== 'valid') {
             $score -= 50;
         }
-        if ($data['catch_all']['is_catch_all']) {
+
+        // Check catch-all
+        $catchAll = $data['catch_all'] ?? false;
+        if (is_array($catchAll)) {
+            if ($catchAll['is_catch_all'] ?? false) {
+                $score -= 20;
+            }
+        } elseif ($catchAll === true) {
             $score -= 20;
         }
-        if ($data['blacklist']) {
-            $score -= 100;
+
+        // Check blacklist (most severe)
+        if ($data['blacklist'] ?? false) {
+            $score = 0; // Blacklisted = not valid
         }
-        if ($data['disposable']) {
+
+        // Check disposable
+        if ($data['disposable'] ?? false) {
             $score -= 50;
         }
 
@@ -73,7 +187,50 @@ class EmailVerificationService
 
     public function isDisposable(string $email): bool
     {
-        // Placeholder: check known disposable domains or use a package
-        return false;
+        // Load from config/services for maintainability
+        $disposableDomains = config('services.email_verification.disposable_domains', []);
+
+        // Fallback to a maintained list if config is not set
+        if (empty($disposableDomains)) {
+            $disposableDomains = [
+                'tempmail.com',
+                '10minutemail.com',
+                'guerrillamail.com',
+                'mailinator.com',
+                'temp-mail.org',
+                'throwaway.email',
+                'yopmail.com',
+                'maildrop.cc',
+                'trashmail.com',
+                'fakeinbox.com',
+            ];
+        }
+
+        [, $domain] = explode('@', $email, 2);
+        $domain = strtolower($domain);
+
+        return in_array($domain, $disposableDomains, true);
+    }
+
+    /**
+     * Normalize MX records to consistent format with 'target' and 'pri' keys.
+     */
+    private function normalizeMxRecords(array $records): array
+    {
+        if (empty($records)) {
+            return [];
+        }
+
+        // Check if records are already in the expected format (associative arrays with 'target' and 'pri')
+        $firstRecord = reset($records);
+        if (is_array($firstRecord) && isset($firstRecord['target']) && isset($firstRecord['pri'])) {
+            return $records; // Already normalized
+        }
+
+        // If still receiving old format, convert it
+        return array_map(fn ($host, $priority) => [
+            'target' => $host,
+            'pri' => (int) $priority,
+        ], $records, array_keys($records));
     }
 }

@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    'email_verification' => [
+        'disposable_domains' => [
+            'tempmail.com',
+            '10minutemail.com',
+            'guerrillamail.com',
+            'mailinator.com',
+            'temp-mail.org',
+            'throwaway.email',
+            'yopmail.com',
+            'maildrop.cc',
+            'trashmail.com',
+            'fakeinbox.com',
+        ],
+    ],
+
 ];

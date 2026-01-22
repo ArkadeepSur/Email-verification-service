@@ -2,7 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Models\VerificationResult;
 use App\Services\EmailVerificationService;
+use App\Services\WebhookService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,96 +15,91 @@ class VerifyEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $email;
+    public ?int $userId;
 
-    public function __construct(string $email)
+    public string $email;
+
+    public function __construct(?int $userId, string $email)
     {
+        $this->userId = $userId;
         $this->email = $email;
     }
 
-    public function handle(EmailVerificationService $service)
+    public function handle(): void
     {
-        // 1. Precheck Logic
-        $precheckResult = $service->precheck($this->email);
+        $service = app(EmailVerificationService::class);
 
-        // 2. Syntax Validation
+        $service->precheck($this->email);
+
         if (! $service->validateSyntax($this->email)) {
-            return $this->markInvalid('syntax_error');
+            $this->markInvalid('syntax_error');
+
+            return;
         }
 
-        // 3. DNS/MX Record Check
         $mxRecords = $service->checkMXRecords($this->email);
         if (empty($mxRecords)) {
-            return $this->markInvalid('no_mx_records');
+            $this->markInvalid('no_mx_records');
+
+            return;
         }
 
-        // 4. SMTP Connection Test
         $smtpResult = $service->verifySMTP($this->email, $mxRecords);
-
-        // 5. Catch-All Detection (Smart Logic)
         $isCatchAll = $service->detectCatchAll($this->email, $mxRecords);
-
-        // 6. Blacklist Check
         $isBlacklisted = $service->checkBlacklist($this->email);
 
-        // 7. Risk Score Calculation
+        $isDisposable = $service->isDisposable($this->email);
         $riskScore = $service->calculateRiskScore([
             'smtp' => $smtpResult,
             'catch_all' => $isCatchAll,
             'blacklist' => $isBlacklisted,
-            'disposable' => $service->isDisposable($this->email),
+            'disposable' => $isDisposable,
         ]);
 
-        // 8. Save Result
-        $this->saveResult($riskScore, $smtpResult, $isCatchAll);
+        $this->saveResult($riskScore, $smtpResult, $isCatchAll, $isDisposable);
     }
 
-    private function markInvalid(string $reason)
+    private function markInvalid(string $reason): void
     {
-        $jobId = null;
-        if (isset($this->job) && method_exists($this->job, 'getJobId')) {
-            $jobId = $this->job->getJobId();
-        }
-
-        \App\Models\VerificationResult::create([
+        VerificationResult::create([
+            'user_id' => $this->userId,
             'email' => $this->email,
-            'status' => 'invalid',
+            'syntax_valid' => false,
+            'smtp' => 'unknown',
+            'catch_all' => false,
+            'disposable' => false,
             'risk_score' => 0,
+            'status' => 'invalid',
             'details' => ['reason' => $reason],
-            'job_id' => $jobId,
         ]);
     }
 
-    private function saveResult($riskScore, $smtpResult, $isCatchAll)
+    private function saveResult(int $riskScore, array $smtpResult, bool $isCatchAll, bool $isDisposable): void
     {
-        $jobId = null;
-        if (isset($this->job) && method_exists($this->job, 'getJobId')) {
-            $jobId = $this->job->getJobId();
-        }
-
-        $details = [
-            'smtp' => $smtpResult,
-            'catch_all' => $isCatchAll,
-        ];
-
-        $result = \App\Models\VerificationResult::create([
+        $result = VerificationResult::create([
+            'user_id' => $this->userId,
             'email' => $this->email,
-            'status' => $riskScore > 0 ? 'ok' : 'invalid',
+            'syntax_valid' => true,
+            'status' => $riskScore > 0 ? 'valid' : 'invalid',
             'risk_score' => $riskScore,
-            'details' => $details,
-            'job_id' => $jobId,
+            'smtp' => $smtpResult['smtp'] ?? 'unknown',
+            'catch_all' => $isCatchAll,
+            'disposable' => $isDisposable,
+            'details' => [
+                'smtp' => $smtpResult,
+                'catch_all' => $isCatchAll,
+            ],
         ]);
 
-        // Fire webhooks (don't let failures break the job)
         try {
-            app(\App\Services\WebhookService::class)->trigger('verification.completed', [
+            app(WebhookService::class)->trigger('verification.completed', [
+                'id' => $result->id,
                 'email' => $this->email,
                 'status' => $result->status,
                 'risk_score' => $riskScore,
-                'id' => $result->id,
             ]);
-        } catch (\Throwable $ex) {
-            // ignore webhook errors
+        } catch (\Throwable) {
+            // swallow webhook failures
         }
     }
 }

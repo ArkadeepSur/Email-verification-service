@@ -62,3 +62,4 @@ If you want, I can:
 - Help move `apps/` files into `app/`, update namespaces, and register services.
 
 If you prefer, I can proceed to add the helper script and `.env.example` now.
+

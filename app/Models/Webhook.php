@@ -18,5 +18,13 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Webhook extends Model
 {
-    protected $fillable = ['url', 'event', 'secret', 'is_active'];
+    protected $fillable = ['user_id', 'url', 'event', 'secret', 'is_active'];
+
+    /**
+     * Get the user that owns this webhook.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
