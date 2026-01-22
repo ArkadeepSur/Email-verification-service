@@ -14,6 +14,11 @@ class GoogleSheetsService
             throw new \InvalidArgumentException('User ID must be a positive integer');
         }
 
+        // Validate retry configuration
+        if (RetryConfig::MAX_RETRIES <= 0) {
+            throw new \RuntimeException('Google Sheets import failed: no attempts configured');
+        }
+
         $attempt = 0;
 
         while ($attempt < RetryConfig::MAX_RETRIES) {
@@ -65,6 +70,9 @@ class GoogleSheetsService
                 }
             }
         }
+
+        // If we exit the loop without returning, throw exception
+        throw new \RuntimeException('Google Sheets import failed after all retry attempts');
     }
 
     public function exportResults(string $spreadsheetId, array $results)
@@ -86,19 +94,20 @@ class GoogleSheetsService
             $client = $this->getGoogleClient();
 
             if (class_exists('\Google_Service_Sheets')) {
+                // Validate Google Sheets client is available before using real client
+                if (! class_exists('\Google_Service_Sheets_ValueRange')) {
+                    Log::warning('Google Sheets ValueRange class not available, skipping export', [
+                        'spreadsheet_id' => $spreadsheetId,
+                    ]);
+                    throw new \RuntimeException('Google Sheets client (google/apiclient) is not installed');
+                }
+
                 $service = new \Google_Service_Sheets($client);
             } elseif (is_object($client) && property_exists($client, 'spreadsheets_values')) {
+                // Mock client path - skip class validation
                 $service = $client;
             } else {
                 throw new \RuntimeException('Google Sheets client is not available');
-            }
-
-            // Validate Google Sheets client is available
-            if (! class_exists('\\Google_Service_Sheets_ValueRange')) {
-                Log::warning('Google Sheets client not available, skipping export', [
-                    'spreadsheet_id' => $spreadsheetId,
-                ]);
-                throw new \RuntimeException('Google Sheets client (google/apiclient) is not installed');
             }
 
             // Transform results into sheet row format
@@ -149,6 +158,9 @@ class GoogleSheetsService
                     }
                 }
             }
+
+            // If we exit the loop without returning, throw exception
+            throw new \RuntimeException('Google Sheets export failed after all retry attempts');
         } catch (\Throwable $e) {
             Log::error('Google Sheets export failed', [
                 'spreadsheet_id' => $spreadsheetId,

@@ -1,5 +1,7 @@
 parameters:
-    # All current PHPStan errors have been resolved
-    # ignoreErrors: []
+    ignoreErrors:
+        -
+            message: '#Instantiated class Google_Service_Sheets_ValueRange not found#'
+            path: app/Services/GoogleSheetsService.php
 
 

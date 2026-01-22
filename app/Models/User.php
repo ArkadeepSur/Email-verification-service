@@ -78,7 +78,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Deduct credits from user balance.
+     * Deduct credits from user balance with row lock to prevent race conditions.
      */
     public function deductCredits(int $amount = 1): bool
     {
@@ -87,14 +87,20 @@ class User extends Authenticatable
         }
 
         return DB::transaction(function () use ($amount) {
-            $this->credits_balance -= $amount;
-            $this->save();
+            // Re-fetch user with pessimistic lock to prevent concurrent modifications
+            $user = User::where('id', $this->id)->lockForUpdate()->first();
+            if (! $user || ! $user->hasCredits($amount)) {
+                return false;
+            }
+
+            $user->credits_balance -= $amount;
+            $user->save();
 
             CreditTransaction::create([
-                'user_id' => $this->id,
+                'user_id' => $user->id,
                 'type' => 'debit',
                 'amount' => $amount,
-                'balance_after' => $this->credits_balance,
+                'balance_after' => $user->credits_balance,
                 'description' => 'Email verification',
             ]);
 
@@ -103,19 +109,25 @@ class User extends Authenticatable
     }
 
     /**
-     * Add credits to user balance.
+     * Add credits to user balance with row lock to prevent race conditions.
      */
     public function addCredits(int $amount, string $description = 'Credit addition'): bool
     {
         return DB::transaction(function () use ($amount, $description) {
-            $this->credits_balance += $amount;
-            $this->save();
+            // Re-fetch user with pessimistic lock to prevent concurrent modifications
+            $user = User::where('id', $this->id)->lockForUpdate()->first();
+            if (! $user) {
+                return false;
+            }
+
+            $user->credits_balance += $amount;
+            $user->save();
 
             CreditTransaction::create([
-                'user_id' => $this->id,
+                'user_id' => $user->id,
                 'type' => 'credit',
                 'amount' => $amount,
-                'balance_after' => $this->credits_balance,
+                'balance_after' => $user->credits_balance,
                 'description' => $description,
             ]);
 
