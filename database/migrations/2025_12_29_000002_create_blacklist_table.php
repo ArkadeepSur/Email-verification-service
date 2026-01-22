@@ -8,13 +8,15 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('blacklists', function (Blueprint $table) {
-            $table->id();
-            $table->string('pattern');
-            $table->string('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('blacklists')) {
+            Schema::create('blacklists', function (Blueprint $table) {
+                $table->id();
+                $table->string('pattern');
+                $table->string('description')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     public function down()

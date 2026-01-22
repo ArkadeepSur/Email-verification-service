@@ -8,13 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('throttle_events', function (Blueprint $table) {
-            $table->id();
-            $table->string('throttle_key');
-            $table->string('email')->nullable();
-            $table->string('ip')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('throttle_events')) {
+            Schema::create('throttle_events', function (Blueprint $table) {
+                $table->id();
+                $table->string('throttle_key');
+                $table->string('email')->nullable();
+                $table->string('ip')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
