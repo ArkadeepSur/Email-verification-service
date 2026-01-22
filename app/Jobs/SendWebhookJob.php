@@ -3,36 +3,74 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Queue\Middleware\ThrottlesExceptions;
 
-class SendWebhookJob implements ShouldQueue
+class SendWebhook implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public string $url;
+    public $userId;
+    public $event;
+    public $payload;
 
-    public array $payload;
+    public $tries = 5; // maximum retries
 
-    public ?string $secret;
-
-    public function __construct(string $url, array $payload, ?string $secret = null)
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(int $userId, string $event, array $payload)
     {
-        $this->url = $url;
+        $this->userId = $userId;
+        $this->event = $event;
         $this->payload = $payload;
-        $this->secret = $secret;
     }
 
-    public function handle()
+    /**
+     * Exponential backoff for retries.
+     */
+    public function backoff(): array
     {
-        $headers = ['Accept' => 'application/json'];
-        if ($this->secret) {
-            $headers['X-Webhook-Signature'] = hash_hmac('sha256', json_encode($this->payload), $this->secret);
+        $attempts = $this->attempts();
+        return pow(2, $attempts) * 10; // exponential seconds
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        // fetch webhook URL from your database
+        $webhook = \App\Models\Webhook::where('user_id', $this->userId)
+            ->where('event', $this->event)
+            ->first();
+
+        if (!$webhook) {
+            // no webhook to send
+            return;
         }
 
-        Http::withHeaders($headers)->post($this->url, $this->payload);
+        $response = Http::timeout(5)->post($webhook->url, $this->payload);
+
+        if (!$response->successful()) {
+            // Throw exception to retry automatically
+            throw new \Exception("Webhook failed: HTTP " . $response->status());
+        }
+    }
+
+    /**
+     * Optional: log failed jobs permanently
+     */
+    public function failed(\Throwable $exception): void
+    {
+        \Log::error('Webhook failed permanently', [
+            'user_id' => $this->userId,
+            'event' => $this->event,
+            'error' => $exception->getMessage(),
+        ]);
     }
 }

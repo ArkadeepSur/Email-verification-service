@@ -35,8 +35,65 @@ class EmailVerificationService
 
     public function verifySMTP(string $email, array $mxRecords): array
     {
-        // Lightweight placeholder
-        return ['ok' => true];
+      [$local, $domain] = explode('@', $email);
+
+    $records = dns_get_record($domain, DNS_MX);
+    if (empty($records)) {
+        return [
+            'smtp' => 'invalid',
+            'reason' => 'No MX records found',
+        ];
+    }
+
+    usort($records, fn ($a, $b) => $a['pri'] <=> $b['pri']);
+
+    foreach ($records as $mx) {
+        $host = $mx['target'];
+
+        try {
+            $socket = fsockopen($host, 25, $errno, $errstr, 10);
+            if (! $socket) {
+                continue;
+            }
+
+            stream_set_timeout($socket, 10);
+
+            $this->read($socket); // banner
+
+            $this->write($socket, "EHLO verifier.local");
+            $this->read($socket);
+
+            $this->write($socket, "MAIL FROM:<verify@verifier.local>");
+            $this->read($socket);
+
+            $this->write($socket, "RCPT TO:<{$email}>");
+            $response = $this->read($socket);
+
+            $this->write($socket, "QUIT");
+            fclose($socket);
+
+            if (str_starts_with($response, '250')) {
+                return [
+                    'smtp' => 'valid',
+                    'reason' => 'Mailbox accepted',
+                ];
+            }
+
+            if (str_starts_with($response, '550')) {
+                return [
+                    'smtp' => 'invalid',
+                    'reason' => 'Mailbox rejected',
+                ];
+            }
+        } catch (\Throwable $e) {
+            continue;
+        }
+    }
+
+    return [
+        'smtp' => 'unknown',
+        'reason' => 'SMTP verification inconclusive',
+    ];
     }
 
     public function detectCatchAll(string $email, array $mxRecords): array
@@ -76,4 +133,23 @@ class EmailVerificationService
         // Placeholder: check known disposable domains or use a package
         return false;
     }
+
+    private function write($socket, string $command): void
+{
+    fwrite($socket, $command . "\r\n");
 }
+
+private function read($socket): string
+{
+    $response = '';
+    while ($line = fgets($socket, 515)) {
+        $response .= $line;
+        if (preg_match('/^\d{3}\s/', $line)) {
+            break;
+        }
+    }
+    return trim($response);
+}
+}
+
+

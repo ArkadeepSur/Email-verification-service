@@ -2,60 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Auth\Passwords\CanResetPassword;
-use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\DB;
-use Laravel\Sanctum\HasApiTokens;
 
-/**
- * App\Models\User
- *
- * @property int $id
- * @property string $email
- * @property int $credits_balance
- *
- * @method static \Illuminate\Database\Eloquent\Builder|User where(string $column, string $operator = null, $value = null)
- * @method static self create(array $attributes = [])
- * @method static self firstOrCreate(array $attributes, array $values = [])
- */
-class User extends Authenticatable implements CanResetPasswordContract
+class User extends Authenticatable
 {
-    use CanResetPassword, HasApiTokens, Notifiable;
+    use HasFactory, Notifiable;
 
-    public function hasCredits(int $required = 1): bool
-    {
-        return $this->credits_balance >= $required;
-    }
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
 
-    public function deductCredits(int $amount): void
-    {
-        DB::transaction(function () use ($amount) {
-            $this->decrement('credits_balance', $amount);
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-            CreditTransaction::create([
-                'user_id' => $this->id,
-                'type' => 'debit',
-                'amount' => $amount,
-                'balance_after' => $this->credits_balance,
-                'description' => 'Email verification',
-            ]);
-        });
-    }
-
-    public function addCredits(int $amount, string $reason = 'Purchase'): void
-    {
-        DB::transaction(function () use ($amount, $reason) {
-            $this->increment('credits_balance', $amount);
-
-            CreditTransaction::create([
-                'user_id' => $this->id,
-                'type' => 'credit',
-                'amount' => $amount,
-                'balance_after' => $this->credits_balance,
-                'description' => $reason,
-            ]);
-        });
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
 }

@@ -28,12 +28,12 @@ reviews:
     critical: true
     high: true
     medium: true
-    low: false
+    low: true
 
 language_specific:
   php:
     framework: laravel
-    php_version: "8.2"
+    php_version: "8.5"
 
 limits:
   max_files: 500
