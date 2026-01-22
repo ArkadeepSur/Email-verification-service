@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Http;
 use App\Jobs\VerifyEmailJob;
 use App\Models\User;
 use App\Models\VerificationResult;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Tests\TestCase;
 
 class VerificationPipelineTest extends TestCase
 {
@@ -42,7 +42,7 @@ class VerificationPipelineTest extends TestCase
         // Assert DB record exists
         $this->assertDatabaseHas('verification_results', [
             'user_id' => $user->id,
-            'email' => $email
+            'email' => $email,
         ]);
 
         $result = VerificationResult::where('email', $email)->first();

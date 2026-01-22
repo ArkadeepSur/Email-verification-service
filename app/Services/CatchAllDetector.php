@@ -35,46 +35,46 @@ class CatchAllDetector
     private function smtpAccepts(string $email, array $mxRecords): bool
     {
         $records = dns_get_record($domain, DNS_MX);
-    if (empty($records)) {
-        return false;
-    }
+        if (empty($records)) {
+            return false;
+        }
 
-    usort($records, fn ($a, $b) => $a['pri'] <=> $b['pri']);
+        usort($records, fn ($a, $b) => $a['pri'] <=> $b['pri']);
 
-    $fakeEmail = 'nonexistent_' . bin2hex(random_bytes(6)) . '@' . $domain;
+        $fakeEmail = 'nonexistent_'.bin2hex(random_bytes(6)).'@'.$domain;
 
-    foreach ($records as $mx) {
-        try {
-            $socket = fsockopen($mx['target'], 25, $errno, $errstr, 10);
-            if (! $socket) {
+        foreach ($records as $mx) {
+            try {
+                $socket = fsockopen($mx['target'], 25, $errno, $errstr, 10);
+                if (! $socket) {
+                    continue;
+                }
+
+                stream_set_timeout($socket, 10);
+
+                $this->read($socket);
+
+                $this->write($socket, 'EHLO catchall.test');
+                $this->read($socket);
+
+                $this->write($socket, 'MAIL FROM:<check@verifier.local>');
+                $this->read($socket);
+
+                $this->write($socket, "RCPT TO:<{$fakeEmail}>");
+                $response = $this->read($socket);
+
+                $this->write($socket, 'QUIT');
+                fclose($socket);
+
+                if (str_starts_with($response, '250')) {
+                    return true; // catch-all detected
+                }
+            } catch (\Throwable $e) {
                 continue;
             }
-
-            stream_set_timeout($socket, 10);
-
-            $this->read($socket);
-
-            $this->write($socket, "EHLO catchall.test");
-            $this->read($socket);
-
-            $this->write($socket, "MAIL FROM:<check@verifier.local>");
-            $this->read($socket);
-
-            $this->write($socket, "RCPT TO:<{$fakeEmail}>");
-            $response = $this->read($socket);
-
-            $this->write($socket, "QUIT");
-            fclose($socket);
-
-            if (str_starts_with($response, '250')) {
-                return true; // catch-all detected
-            }
-        } catch (\Throwable $e) {
-            continue;
         }
-    }
 
-    return false;
+        return false;
     }
 
     private function generateRandomEmail(string $domain): string

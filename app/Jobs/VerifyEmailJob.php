@@ -14,6 +14,7 @@ class VerifyEmailJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $userId;
+
     public $email;
 
     public function __construct(int $userId, string $email)

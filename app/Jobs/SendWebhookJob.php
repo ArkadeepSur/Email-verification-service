@@ -3,19 +3,20 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\Middleware\ThrottlesExceptions;
+use Illuminate\Support\Facades\Http;
 
 class SendWebhook implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $userId;
+
     public $event;
+
     public $payload;
 
     public $tries = 5; // maximum retries
@@ -36,6 +37,7 @@ class SendWebhook implements ShouldQueue
     public function backoff(): array
     {
         $attempts = $this->attempts();
+
         return pow(2, $attempts) * 10; // exponential seconds
     }
 
@@ -49,16 +51,16 @@ class SendWebhook implements ShouldQueue
             ->where('event', $this->event)
             ->first();
 
-        if (!$webhook) {
+        if (! $webhook) {
             // no webhook to send
             return;
         }
 
         $response = Http::timeout(5)->post($webhook->url, $this->payload);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             // Throw exception to retry automatically
-            throw new \Exception("Webhook failed: HTTP " . $response->status());
+            throw new \Exception('Webhook failed: HTTP '.$response->status());
         }
     }
 
