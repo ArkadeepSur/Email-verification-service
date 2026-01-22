@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class EmailVerificationService
 {
     protected CatchAllDetector $catchAllDetector;
@@ -13,7 +15,19 @@ class EmailVerificationService
 
     public function precheck(string $email): array
     {
-        // Placeholder for DNS, disposable checks etc.
+        // Quick DNS validation for domain existence
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['ok' => false, 'reason' => 'Invalid email format'];
+        }
+
+        [$local, $domain] = explode('@', $email, 2);
+
+        // Check basic DNS records for domain
+        $records = dns_get_record($domain, DNS_ANY);
+        if (empty($records)) {
+            return ['ok' => false, 'reason' => 'Domain has no DNS records'];
+        }
+
         return ['ok' => true];
     }
 
@@ -51,10 +65,16 @@ class EmailVerificationService
             $host = $mx['target'];
             $errno = 0;
             $errstr = '';
+            $socket = null;
 
             try {
                 $socket = fsockopen($host, 25, $errno, $errstr, 10);
                 if (! $socket) {
+                    Log::debug('Failed to connect to SMTP server', [
+                        'host' => $host,
+                        'error' => $errstr,
+                    ]);
+
                     continue;
                 }
 
@@ -72,7 +92,6 @@ class EmailVerificationService
                 $response = $this->read($socket);
 
                 $this->write($socket, 'QUIT');
-                fclose($socket);
 
                 if (str_starts_with($response, '250')) {
                     return [
@@ -88,7 +107,16 @@ class EmailVerificationService
                     ];
                 }
             } catch (\Throwable $e) {
+                Log::debug('SMTP verification error', [
+                    'host' => $host,
+                    'error' => $e->getMessage(),
+                ]);
+
                 continue;
+            } finally {
+                if ($socket) {
+                    fclose($socket);
+                }
             }
         }
 
@@ -152,8 +180,23 @@ class EmailVerificationService
 
     public function isDisposable(string $email): bool
     {
-        // Placeholder: check known disposable domains or use a package
-        return false;
+        $disposableDomains = [
+            'tempmail.com',
+            '10minutemail.com',
+            'guerrillamail.com',
+            'mailinator.com',
+            'temp-mail.org',
+            'throwaway.email',
+            'yopmail.com',
+            'maildrop.cc',
+            'trashmail.com',
+            'fakeinbox.com',
+        ];
+
+        [$local, $domain] = explode('@', $email, 2);
+        $domain = strtolower($domain);
+
+        return in_array($domain, $disposableDomains, true);
     }
 
     private function write($socket, string $command): void

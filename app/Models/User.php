@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -37,6 +38,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'credits_balance' => 'integer',
     ];
 
     /**
@@ -80,18 +82,20 @@ class User extends Authenticatable
             return false;
         }
 
-        $this->credits_balance -= $amount;
-        $this->save();
+        return DB::transaction(function () use ($amount) {
+            $this->credits_balance -= $amount;
+            $this->save();
 
-        CreditTransaction::create([
-            'user_id' => $this->id,
-            'type' => 'debit',
-            'amount' => $amount,
-            'balance_after' => $this->credits_balance,
-            'description' => 'Email verification',
-        ]);
+            CreditTransaction::create([
+                'user_id' => $this->id,
+                'type' => 'debit',
+                'amount' => $amount,
+                'balance_after' => $this->credits_balance,
+                'description' => 'Email verification',
+            ]);
 
-        return true;
+            return true;
+        });
     }
 
     /**
@@ -99,17 +103,19 @@ class User extends Authenticatable
      */
     public function addCredits(int $amount, string $description = 'Credit addition'): bool
     {
-        $this->credits_balance += $amount;
-        $this->save();
+        return DB::transaction(function () use ($amount, $description) {
+            $this->credits_balance += $amount;
+            $this->save();
 
-        CreditTransaction::create([
-            'user_id' => $this->id,
-            'type' => 'credit',
-            'amount' => $amount,
-            'balance_after' => $this->credits_balance,
-            'description' => $description,
-        ]);
+            CreditTransaction::create([
+                'user_id' => $this->id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'balance_after' => $this->credits_balance,
+                'description' => $description,
+            ]);
 
-        return true;
+            return true;
+        });
     }
 }

@@ -6,23 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('webhooks', function (Blueprint $table) {
-            //
+            $table->index(['user_id', 'is_active'], 'idx_user_active');
+            $table->index(['event', 'is_active'], 'idx_event_active');
+            $table->index('created_at');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('webhooks', function (Blueprint $table) {
-            //
+            $table->dropIndex('idx_user_active');
+            $table->dropIndex('idx_event_active');
+            $table->dropIndex(['created_at']);
         });
     }
 };
