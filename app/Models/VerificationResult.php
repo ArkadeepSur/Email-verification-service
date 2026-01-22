@@ -18,9 +18,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class VerificationResult extends Model
 {
-    protected $fillable = ['email', 'status', 'risk_score', 'details', 'job_id', 'user_id'];
+    protected $fillable = ['email', 'status', 'risk_score', 'details', 'job_id', 'user_id', 'syntax_valid', 'smtp', 'catch_all', 'disposable'];
 
     protected $casts = [
         'details' => 'array',
+        'syntax_valid' => 'boolean',
+        'catch_all' => 'boolean',
+        'disposable' => 'boolean',
     ];
 }

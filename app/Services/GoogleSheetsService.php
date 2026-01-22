@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Jobs\VerifyBulkEmailsJob;
+use Illuminate\Support\Facades\Auth;
 
 class GoogleSheetsService
 {
-    public function importEmails(string $spreadsheetId, string $range)
+    public function importEmails(string $spreadsheetId, string $range, ?int $userId = null)
     {
+        $userId = $userId ?? Auth::id();
         $client = $this->getGoogleClient();
 
         // If the real Google API client class is available, prefer to wrap it.
@@ -28,7 +30,7 @@ class GoogleSheetsService
             return filter_var($value, FILTER_VALIDATE_EMAIL);
         });
 
-        return VerifyBulkEmailsJob::dispatch($emails->toArray());
+        return VerifyBulkEmailsJob::dispatch($userId, $emails->toArray());
     }
 
     public function exportResults(string $spreadsheetId, array $results)

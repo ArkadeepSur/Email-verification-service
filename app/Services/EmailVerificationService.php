@@ -49,6 +49,8 @@ class EmailVerificationService
 
         foreach ($records as $mx) {
             $host = $mx['target'];
+            $errno = 0;
+            $errstr = '';
 
             try {
                 $socket = fsockopen($host, 25, $errno, $errstr, 10);
@@ -96,11 +98,12 @@ class EmailVerificationService
         ];
     }
 
-    public function detectCatchAll(string $email, array $mxRecords): array
+    public function detectCatchAll(string $email, array $mxRecords): bool
     {
         [$user, $domain] = explode('@', $email, 2);
 
-        return $this->catchAllDetector->detect($domain, $mxRecords);
+        $result = $this->catchAllDetector->detect($domain, $mxRecords);
+        return $result['is_catch_all'] ?? false;
     }
 
     public function checkBlacklist(string $email): bool
@@ -110,18 +113,36 @@ class EmailVerificationService
 
     public function calculateRiskScore(array $data): int
     {
-        // Simple scoring placeholder
+        // Start with maximum score
         $score = 100;
-        if (! $data['smtp']['ok']) {
+        
+        // Check SMTP result
+        $smtpResult = $data['smtp'] ?? [];
+        if (is_array($smtpResult)) {
+            if (!($smtpResult['ok'] ?? true)) {
+                $score -= 50;
+            }
+        } elseif ($smtpResult !== 'valid') {
             $score -= 50;
         }
-        if ($data['catch_all']['is_catch_all']) {
+        
+        // Check catch-all
+        $catchAll = $data['catch_all'] ?? false;
+        if (is_array($catchAll)) {
+            if ($catchAll['is_catch_all'] ?? false) {
+                $score -= 20;
+            }
+        } elseif ($catchAll === true) {
             $score -= 20;
         }
-        if ($data['blacklist']) {
-            $score -= 100;
+        
+        // Check blacklist (most severe)
+        if ($data['blacklist'] ?? false) {
+            $score = 0; // Blacklisted = not valid
         }
-        if ($data['disposable']) {
+        
+        // Check disposable
+        if ($data['disposable'] ?? false) {
             $score -= 50;
         }
 

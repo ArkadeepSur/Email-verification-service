@@ -6,17 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('webhooks', function (Blueprint $table) {
-            $table->index(['user_id', 'event'], 'webhooks_user_event_idx');
+            if (!Schema::hasColumn('webhooks', 'user_id')) {
+                $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            }
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('webhooks', function (Blueprint $table) {
-            $table->dropIndex('webhooks_user_event_idx');
+            $table->dropConstrainedForeignId('user_id');
         });
     }
 };

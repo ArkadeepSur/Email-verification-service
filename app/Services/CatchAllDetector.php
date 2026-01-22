@@ -34,6 +34,11 @@ class CatchAllDetector
 
     private function smtpAccepts(string $email, array $mxRecords): bool
     {
+        [$local, $domain] = explode('@', $email);
+
+        if (empty($domain)) {
+            return false;
+        }
         $records = dns_get_record($domain, DNS_MX);
         if (empty($records)) {
             return false;

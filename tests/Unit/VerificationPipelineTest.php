@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Unit;
 
 use App\Jobs\VerifyEmailJob;
 use App\Models\User;
@@ -70,8 +70,8 @@ class VerificationPipelineTest extends TestCase
 
         $result = VerificationResult::where('email', $email)->first();
 
-        $this->assertEquals('invalid', $result->syntax_valid);
+        $this->assertFalse($result->syntax_valid);
         $this->assertEquals('unknown', $result->smtp);
-        $this->assertEquals(false, $result->catch_all);
+        $this->assertFalse($result->catch_all);
     }
 }

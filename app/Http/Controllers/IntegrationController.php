@@ -11,14 +11,14 @@ class IntegrationController extends Controller
     public function syncGoogleSheets(Request $request, GoogleSheetsService $sheets)
     {
         $request->validate(['spreadsheet_id' => 'required', 'range' => 'required']);
-        $jobId = $sheets->importEmails($request->input('spreadsheet_id'), $request->input('range'));
+        $jobId = $sheets->importEmails($request->input('spreadsheet_id'), $request->input('range'), \Illuminate\Support\Facades\Auth::id());
 
         return response()->json(['job_id' => $jobId]);
     }
 
     public function syncHubspot(Request $request, HubSpotService $hubspot)
     {
-        $jobId = $hubspot->syncContacts();
+        $jobId = $hubspot->syncContacts([], \Illuminate\Support\Facades\Auth::id());
 
         return response()->json(['job_id' => $jobId]);
     }

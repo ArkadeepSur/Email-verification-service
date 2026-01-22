@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Jobs\VerifyBulkEmailsJob;
+use Illuminate\Support\Facades\Auth;
 
 class HubSpotService
 {
-    public function syncContacts(array $filters = [])
+    public function syncContacts(array $filters = [], ?int $userId = null)
     {
+        $userId = $userId ?? Auth::id();
         $client = $this->getHubSpotClient();
 
         // Fetch contacts from HubSpot
@@ -16,7 +18,7 @@ class HubSpotService
         // Extract emails and verify
         $emails = collect($contacts)->pluck('properties.email')->filter();
 
-        VerifyBulkEmailsJob::dispatch($emails->toArray());
+        VerifyBulkEmailsJob::dispatch($userId, $emails->toArray());
 
         return true;
     }
