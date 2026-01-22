@@ -9,17 +9,16 @@ return new class extends Migration
     public function up()
     {
         Schema::table('verification_results', function (Blueprint $table) {
-            // Add missing columns if they don't exist
-            if (!Schema::hasColumn('verification_results', 'syntax_valid')) {
+            if (! Schema::hasColumn('verification_results', 'syntax_valid')) {
                 $table->boolean('syntax_valid')->nullable();
             }
-            if (!Schema::hasColumn('verification_results', 'smtp')) {
+            if (! Schema::hasColumn('verification_results', 'smtp')) {
                 $table->string('smtp')->nullable();
             }
-            if (!Schema::hasColumn('verification_results', 'catch_all')) {
+            if (! Schema::hasColumn('verification_results', 'catch_all')) {
                 $table->boolean('catch_all')->nullable();
             }
-            if (!Schema::hasColumn('verification_results', 'disposable')) {
+            if (! Schema::hasColumn('verification_results', 'disposable')) {
                 $table->boolean('disposable')->nullable();
             }
         });

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('webhooks', function (Blueprint $table) {
-            if (!Schema::hasColumn('webhooks', 'user_id')) {
+            if (! Schema::hasColumn('webhooks', 'user_id')) {
                 $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             }
         });

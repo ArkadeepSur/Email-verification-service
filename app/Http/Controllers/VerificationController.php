@@ -46,7 +46,7 @@ class VerificationController extends Controller
         $path = $request->file('file')->getRealPath();
 
         $emails = array_filter(array_map('trim', file($path)));
-        
+
         if (! Auth::user()->hasCredits(count($emails))) {
             return response()->json(['error' => 'Insufficient credits'], 402);
         }
@@ -77,7 +77,7 @@ class VerificationController extends Controller
     {
         $request->validate(['format' => 'required|in:csv,json']);
         $format = $request->input('format');
-        
+
         $results = VerificationResult::where('job_id', $jobId)
             ->where('user_id', Auth::id())
             ->get();

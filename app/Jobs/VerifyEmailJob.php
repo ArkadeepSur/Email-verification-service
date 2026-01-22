@@ -14,7 +14,9 @@ use Illuminate\Queue\SerializesModels;
 class VerifyEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     public ?int $userId;
+
     public string $email;
 
     public function __construct(?int $userId, string $email)
@@ -31,12 +33,14 @@ class VerifyEmailJob implements ShouldQueue
 
         if (! $service->validateSyntax($this->email)) {
             $this->markInvalid('syntax_error');
+
             return;
         }
 
         $mxRecords = $service->checkMXRecords($this->email);
         if (empty($mxRecords)) {
             $this->markInvalid('no_mx_records');
+
             return;
         }
 

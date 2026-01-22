@@ -103,6 +103,7 @@ class EmailVerificationService
         [$user, $domain] = explode('@', $email, 2);
 
         $result = $this->catchAllDetector->detect($domain, $mxRecords);
+
         return $result['is_catch_all'] ?? false;
     }
 
@@ -115,17 +116,17 @@ class EmailVerificationService
     {
         // Start with maximum score
         $score = 100;
-        
+
         // Check SMTP result
         $smtpResult = $data['smtp'] ?? [];
         if (is_array($smtpResult)) {
-            if (!($smtpResult['ok'] ?? true)) {
+            if (! ($smtpResult['ok'] ?? true)) {
                 $score -= 50;
             }
         } elseif ($smtpResult !== 'valid') {
             $score -= 50;
         }
-        
+
         // Check catch-all
         $catchAll = $data['catch_all'] ?? false;
         if (is_array($catchAll)) {
@@ -135,12 +136,12 @@ class EmailVerificationService
         } elseif ($catchAll === true) {
             $score -= 20;
         }
-        
+
         // Check blacklist (most severe)
         if ($data['blacklist'] ?? false) {
             $score = 0; // Blacklisted = not valid
         }
-        
+
         // Check disposable
         if ($data['disposable'] ?? false) {
             $score -= 50;

@@ -13,6 +13,7 @@ class VerifyBulkEmailsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public array $emails;
+
     public ?int $userId;
 
     public function __construct(?int $userId, array $emails)

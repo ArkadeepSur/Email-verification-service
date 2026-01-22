@@ -65,7 +65,7 @@ class User extends Authenticatable
      */
     public function deductCredits(int $amount = 1): bool
     {
-        if (!$this->hasCredits($amount)) {
+        if (! $this->hasCredits($amount)) {
             return false;
         }
 
