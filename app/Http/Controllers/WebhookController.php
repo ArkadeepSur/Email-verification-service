@@ -15,3 +15,4 @@ class WebhookController extends Controller
         return response()->json($webhook, 201);
     }
 }
+

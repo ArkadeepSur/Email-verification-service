@@ -19,3 +19,4 @@ class ThrottleEvent extends Model
 {
     protected $fillable = ['throttle_key', 'email', 'ip'];
 }
+

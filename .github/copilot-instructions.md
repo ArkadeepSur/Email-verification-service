@@ -79,3 +79,4 @@ Questions for reviewers
 ---
 
 If anything here is unclear or you'd like more examples (test snippets, sample `.env.example`, or a migration for missing columns), tell me which area to expand and I will update this file. ✅
+

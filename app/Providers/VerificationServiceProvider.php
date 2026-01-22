@@ -20,3 +20,4 @@ class VerificationServiceProvider extends ServiceProvider
         // bootstrapping if necessary
     }
 }
+

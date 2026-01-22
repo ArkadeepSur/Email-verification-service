@@ -47,3 +47,4 @@ class AdminThrottleUiTest extends TestCase
         $resp->assertStatus(403);
     }
 }
+

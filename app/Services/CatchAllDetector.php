@@ -53,3 +53,4 @@ class CatchAllDetector
         return bin2hex(random_bytes(5)).'@'.$domain;
     }
 }
+

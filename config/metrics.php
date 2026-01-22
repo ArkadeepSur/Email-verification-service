@@ -11,3 +11,4 @@ return [
         'prefix' => env('STATSD_PREFIX', env('APP_NAME') ? Str::slug(env('APP_NAME')).'.' : ''),
     ],
 ];
+

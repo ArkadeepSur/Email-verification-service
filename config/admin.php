@@ -7,3 +7,4 @@ return [
     'notify_total_events_threshold' => env('ADMIN_NOTIFY_TOTAL_EVENTS_THRESHOLD', 10),
     'notify_window_minutes' => env('ADMIN_NOTIFY_WINDOW_MINUTES', 60),
 ];
+

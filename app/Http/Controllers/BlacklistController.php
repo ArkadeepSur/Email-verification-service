@@ -39,3 +39,4 @@ class BlacklistController extends Controller
         return response()->json(null, 204);
     }
 }
+

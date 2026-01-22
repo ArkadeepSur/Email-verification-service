@@ -27,3 +27,4 @@ class AggregatedMetricsTest extends TestCase
         $this->assertEquals(3, $json['distinct_accounts']);
     }
 }
+

@@ -71,3 +71,4 @@ class ThrottleNotificationTest extends TestCase
         Notification::assertSentTimes(LockoutNotification::class, 1);
     }
 }
+

@@ -35,3 +35,4 @@ class RegistrationTest extends TestCase
         $response->assertSessionHasErrors(['name', 'email', 'password']);
     }
 }
+

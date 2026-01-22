@@ -59,3 +59,4 @@ class ThrottleDigestNotification extends Notification
         return $msg;
     }
 }
+

@@ -35,3 +35,4 @@ class TokenController extends Controller
         return redirect()->back();
     }
 }
+

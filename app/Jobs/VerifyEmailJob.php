@@ -106,3 +106,4 @@ class VerifyEmailJob implements ShouldQueue
         }
     }
 }
+

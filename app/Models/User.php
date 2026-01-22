@@ -59,3 +59,4 @@ class User extends Authenticatable implements CanResetPasswordContract
         });
     }
 }
+

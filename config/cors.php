@@ -17,3 +17,4 @@ return [
 
     'supports_credentials' => env('CORS_SUPPORTS_CREDENTIALS', true),
 ];
+

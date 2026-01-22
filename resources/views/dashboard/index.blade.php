@@ -8,3 +8,4 @@
         <li><a href="{{ route('tokens.index') }}" class="text-blue-600">Manage API Tokens</a></li>
     </ul>
 @endsection
+

@@ -23,3 +23,4 @@ class IntegrationController extends Controller
         return response()->json(['job_id' => $jobId]);
     }
 }
+

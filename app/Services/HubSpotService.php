@@ -46,3 +46,4 @@ class HubSpotService
         throw new \RuntimeException('HubSpot client is not configured');
     }
 }
+

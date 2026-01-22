@@ -210,3 +210,4 @@ class ThrottleController extends Controller
         ]);
     }
 }
+

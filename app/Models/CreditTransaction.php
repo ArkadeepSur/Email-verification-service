@@ -20,3 +20,4 @@ class CreditTransaction extends Model
 {
     protected $fillable = ['user_id', 'type', 'amount', 'balance_after', 'description'];
 }
+

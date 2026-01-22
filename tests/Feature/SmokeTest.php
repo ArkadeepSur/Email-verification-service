@@ -13,3 +13,4 @@ class SmokeTest extends TestCase
         $this->assertFalse($service->validateSyntax('not-an-email'));
     }
 }
+

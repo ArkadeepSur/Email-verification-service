@@ -85,3 +85,4 @@ if ($RunComposer) {
 
 Write-Host "Move complete. Backups are at: $backupDir" -ForegroundColor Green
 Write-Host "Next steps: review moved files, run 'composer dump-autoload' if not done, and run tests." -ForegroundColor Green
+

@@ -16,3 +16,4 @@ class MetricsPublisherTest extends TestCase
         $this->assertTrue(true); // no-op: ensure no exception
     }
 }
+

@@ -40,3 +40,4 @@ class StatsdPublisher implements MetricsPublisher
         $this->send($msg);
     }
 }
+

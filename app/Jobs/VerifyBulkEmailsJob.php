@@ -26,3 +26,4 @@ class VerifyBulkEmailsJob implements ShouldQueue
         }
     }
 }
+

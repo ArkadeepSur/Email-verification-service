@@ -77,3 +77,4 @@ class EmailVerificationService
         return false;
     }
 }
+

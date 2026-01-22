@@ -21,3 +21,4 @@ class CreditController extends Controller
         return response()->json(CreditTransaction::where('user_id', $user->id)->latest()->get());
     }
 }
+

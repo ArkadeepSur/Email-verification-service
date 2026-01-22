@@ -41,3 +41,4 @@ if (Test-Path apps) {
 
 Write-Host "Scaffold complete. Next steps: copy .env.example to .env and update settings, run 'composer install', 'php artisan key:generate', 'php artisan migrate'"
 Write-Host "If you plan to use queues and Redis, install and configure Redis and Horizon (composer require laravel/horizon)."
+

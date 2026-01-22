@@ -61,3 +61,4 @@ class HubSpotServiceTest extends TestCase
         Mockery::close();
     }
 }
+

@@ -18,3 +18,4 @@ class Blacklist extends Model
 {
     protected $fillable = ['pattern', 'description', 'is_active'];
 }
+

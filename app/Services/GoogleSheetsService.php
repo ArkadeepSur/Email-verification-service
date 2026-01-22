@@ -47,3 +47,4 @@ class GoogleSheetsService
         throw new \RuntimeException('Google client is not configured');
     }
 }
+
