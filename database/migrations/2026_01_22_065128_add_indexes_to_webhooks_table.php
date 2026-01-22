@@ -13,6 +13,12 @@ return new class extends Migration
             $table->index(['event', 'is_active'], 'idx_event_active');
             $table->index('created_at');
         });
+
+        Schema::table('verification_results', function (Blueprint $table) {
+            $table->index(['user_id', 'email'], 'idx_user_email');
+            $table->index(['user_id', 'status'], 'idx_user_status');
+            $table->index('created_at');
+        });
     }
 
     public function down(): void
@@ -20,6 +26,12 @@ return new class extends Migration
         Schema::table('webhooks', function (Blueprint $table) {
             $table->dropIndex('idx_user_active');
             $table->dropIndex('idx_event_active');
+            $table->dropIndex(['created_at']);
+        });
+
+        Schema::table('verification_results', function (Blueprint $table) {
+            $table->dropIndex('idx_user_email');
+            $table->dropIndex('idx_user_status');
             $table->dropIndex(['created_at']);
         });
     }
