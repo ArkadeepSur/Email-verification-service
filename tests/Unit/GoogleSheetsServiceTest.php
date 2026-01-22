@@ -49,7 +49,7 @@ class GoogleSheetsServiceTest extends TestCase
 
         $this->app->instance(\App\Services\GoogleSheetsService::class, $serviceMock);
 
-        app(\App\Services\GoogleSheetsService::class)->importEmails('sheet', 'range');
+        app(\App\Services\GoogleSheetsService::class)->importEmails('sheet', 'range', 1);
 
         Bus::assertDispatched(VerifyBulkEmailsJob::class, function ($job) {
             return is_array($job->emails) && in_array('user@example.com', $job->emails) && in_array('another@example.com', $job->emails);

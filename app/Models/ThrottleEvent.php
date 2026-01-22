@@ -17,5 +17,10 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ThrottleEvent extends Model
 {
-    protected $fillable = ['throttle_key', 'email', 'ip'];
+    protected $fillable = ['throttle_key', 'email', 'ip', 'created_at', 'updated_at'];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 }

@@ -35,3 +35,4 @@ For production/async behavior set `QUEUE_CONNECTION=redis` and install Horizon i
 - Add controllers for admin panel, billing and user management
 - Add tests and CI
 - Add sample seeder data for blacklist/webhooks
+

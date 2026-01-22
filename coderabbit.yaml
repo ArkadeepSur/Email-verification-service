@@ -1,0 +1,40 @@
+version: 1
+
+reviews:
+  high_level_summary: true
+  review_status: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_filters:
+    exclude:
+      - vendor/**
+      - node_modules/**
+      - storage/**
+      - bootstrap/cache/**
+      - public/build/**
+      - .env
+      - .env.*
+
+  rules:
+    security: true
+    performance: true
+    maintainability: true
+    readability: true
+    correctness: true
+
+  severity:
+    critical: true
+    high: true
+    medium: true
+    low: true
+
+language_specific:
+  php:
+    framework: laravel
+    php_version: "8.5"
+
+limits:
+  max_files: 500
+  max_file_size_kb: 1024

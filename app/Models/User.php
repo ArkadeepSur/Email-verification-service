@@ -2,60 +2,136 @@
 
 namespace App\Models;
 
-use Illuminate\Auth\Passwords\CanResetPassword;
-use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- * App\Models\User
- *
  * @property int $id
+ * @property string $name
  * @property string $email
+ * @property string $password
  * @property int $credits_balance
+ * @property string|null $email_verified_at
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  *
- * @method static \Illuminate\Database\Eloquent\Builder|User where(string $column, string $operator = null, $value = null)
  * @method static self create(array $attributes = [])
- * @method static self firstOrCreate(array $attributes, array $values = [])
+ * @method static self|null where(string $column, string $operator = null, $value = null)
+ * @method static self|null firstOrCreate(array $attributes, array $values = [])
  */
-class User extends Authenticatable implements CanResetPasswordContract
+class User extends Authenticatable
 {
-    use CanResetPassword, HasApiTokens, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    public function hasCredits(int $required = 1): bool
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'credits_balance',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'credits_balance' => 'integer',
+    ];
+
+    /**
+     * Get the user's verification results.
+     */
+    public function verificationResults(): HasMany
     {
-        return $this->credits_balance >= $required;
+        return $this->hasMany(VerificationResult::class);
     }
 
-    public function deductCredits(int $amount): void
+    /**
+     * Get the user's credit transactions.
+     */
+    public function creditTransactions(): HasMany
     {
-        DB::transaction(function () use ($amount) {
-            $this->decrement('credits_balance', $amount);
+        return $this->hasMany(CreditTransaction::class);
+    }
+
+    /**
+     * Get the user's webhooks.
+     */
+    public function webhooks(): HasMany
+    {
+        return $this->hasMany(Webhook::class);
+    }
+
+    /**
+     * Check if user has enough credits.
+     */
+    public function hasCredits(int $amount = 1): bool
+    {
+        return $this->credits_balance >= $amount;
+    }
+
+    /**
+     * Deduct credits from user balance with row lock to prevent race conditions.
+     */
+    public function deductCredits(int $amount = 1): bool
+    {
+        if (! $this->hasCredits($amount)) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($amount) {
+            // Re-fetch user with pessimistic lock to prevent concurrent modifications
+            $user = User::where('id', $this->id)->lockForUpdate()->first();
+            if (! $user || ! $user->hasCredits($amount)) {
+                return false;
+            }
+
+            $user->credits_balance -= $amount;
+            $user->save();
 
             CreditTransaction::create([
-                'user_id' => $this->id,
+                'user_id' => $user->id,
                 'type' => 'debit',
                 'amount' => $amount,
-                'balance_after' => $this->credits_balance,
+                'balance_after' => $user->credits_balance,
                 'description' => 'Email verification',
             ]);
+
+            return true;
         });
     }
 
-    public function addCredits(int $amount, string $reason = 'Purchase'): void
+    /**
+     * Add credits to user balance with row lock to prevent race conditions.
+     */
+    public function addCredits(int $amount, string $description = 'Credit addition'): bool
     {
-        DB::transaction(function () use ($amount, $reason) {
-            $this->increment('credits_balance', $amount);
+        return DB::transaction(function () use ($amount, $description) {
+            // Re-fetch user with pessimistic lock to prevent concurrent modifications
+            $user = User::where('id', $this->id)->lockForUpdate()->first();
+            if (! $user) {
+                return false;
+            }
+
+            $user->credits_balance += $amount;
+            $user->save();
 
             CreditTransaction::create([
-                'user_id' => $this->id,
+                'user_id' => $user->id,
                 'type' => 'credit',
                 'amount' => $amount,
-                'balance_after' => $this->credits_balance,
-                'description' => $reason,
+                'balance_after' => $user->credits_balance,
+                'description' => $description,
             ]);
+
+            return true;
         });
     }
 }

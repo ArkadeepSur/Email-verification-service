@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Services\Traits\SmtpSocketTrait;
+
 class CatchAllDetector
 {
+    use SmtpSocketTrait;
+
     public function detect(string $domain, array $mxRecords): array
     {
         // Generate random email addresses
@@ -34,13 +38,47 @@ class CatchAllDetector
 
     private function smtpAccepts(string $email, array $mxRecords): bool
     {
-        // SMTP verification logic with timeout handling
-        foreach ($mxRecords as $mx) {
+        [$local, $domain] = explode('@', $email);
+
+        if (empty($domain)) {
+            return false;
+        }
+        $records = dns_get_record($domain, DNS_MX);
+        if (empty($records)) {
+            return false;
+        }
+
+        usort($records, fn ($a, $b) => $a['pri'] <=> $b['pri']);
+
+        $fakeEmail = 'nonexistent_'.bin2hex(random_bytes(6)).'@'.$domain;
+
+        foreach ($records as $mx) {
             try {
-                $socket = fsockopen($mx, 25, $errno, $errstr, 5);
-                // SMTP handshake: HELO, MAIL FROM, RCPT TO
-                // Return true if 250 OK received
-            } catch (\Exception $e) {
+                $socket = fsockopen($mx['target'], 25, $errno, $errstr, 10);
+                if (! $socket) {
+                    continue;
+                }
+
+                stream_set_timeout($socket, 10);
+
+                $this->read($socket);
+
+                $this->write($socket, 'EHLO catchall.test');
+                $this->read($socket);
+
+                $this->write($socket, 'MAIL FROM:<check@verifier.local>');
+                $this->read($socket);
+
+                $this->write($socket, "RCPT TO:<{$fakeEmail}>");
+                $response = $this->read($socket);
+
+                $this->write($socket, 'QUIT');
+                fclose($socket);
+
+                if (str_starts_with($response, '250')) {
+                    return true; // catch-all detected
+                }
+            } catch (\Throwable $e) {
                 continue;
             }
         }
