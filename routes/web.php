@@ -53,4 +53,3 @@ if (env('APP_ENV') === 'local') {
         return 'No dev user found';
     });
 }
-

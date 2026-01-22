@@ -83,4 +83,3 @@ class LoginThrottlingTest extends TestCase
         $final->assertStatus(429);
     }
 }
-

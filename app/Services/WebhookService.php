@@ -24,4 +24,3 @@ class WebhookService
 // - verification.failed
 // - credits.low
 // - subscription.renewed
-

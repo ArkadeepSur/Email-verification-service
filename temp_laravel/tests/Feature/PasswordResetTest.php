@@ -58,4 +58,3 @@ class PasswordResetTest extends TestCase
         $resp->assertSessionHasErrors(['token', 'email', 'password']);
     }
 }
-

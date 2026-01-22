@@ -11,4 +11,3 @@ class PlaceholderTest extends TestCase
         $this->assertTrue(true);
     }
 }
-

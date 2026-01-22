@@ -58,4 +58,3 @@ class GoogleSheetsServiceTest extends TestCase
         Mockery::close();
     }
 }
-

@@ -20,4 +20,3 @@ class DevSeeder extends Seeder
         );
     }
 }
-

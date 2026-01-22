@@ -24,4 +24,3 @@ class VerificationResult extends Model
         'details' => 'array',
     ];
 }
-

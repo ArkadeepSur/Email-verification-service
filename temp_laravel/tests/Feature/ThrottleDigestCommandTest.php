@@ -30,4 +30,3 @@ class ThrottleDigestCommandTest extends TestCase
         );
     }
 }
-

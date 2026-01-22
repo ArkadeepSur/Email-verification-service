@@ -46,4 +46,3 @@ class ApiAuthTest extends TestCase
         $response->assertStatus(401);
     }
 }
-

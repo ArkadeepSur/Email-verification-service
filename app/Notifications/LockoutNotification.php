@@ -34,4 +34,3 @@ class LockoutNotification extends Notification
             ->line('If you recognize these attempts, no action is necessary.');
     }
 }
-

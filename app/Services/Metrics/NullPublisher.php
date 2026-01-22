@@ -14,4 +14,3 @@ class NullPublisher implements MetricsPublisher
         // noop
     }
 }
-

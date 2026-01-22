@@ -76,4 +76,3 @@ class ApiLoginThrottleTest extends TestCase
         $throttled->assertStatus(429);
     }
 }
-

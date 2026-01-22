@@ -55,4 +55,3 @@ class AdminAlertNotification extends Notification
         return $msg;
     }
 }
-

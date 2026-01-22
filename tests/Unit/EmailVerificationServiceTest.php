@@ -39,4 +39,3 @@ class EmailVerificationServiceTest extends TestCase
         $this->assertSame(0, $service->calculateRiskScore($base));
     }
 }
-

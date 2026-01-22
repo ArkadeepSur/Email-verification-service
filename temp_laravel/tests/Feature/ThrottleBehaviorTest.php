@@ -62,4 +62,3 @@ class ThrottleBehaviorTest extends TestCase
         $throttled->assertStatus(429);
     }
 }
-

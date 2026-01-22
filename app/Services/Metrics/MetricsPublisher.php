@@ -8,4 +8,3 @@ interface MetricsPublisher
 
     public function gauge(string $metric, $value): void;
 }
-

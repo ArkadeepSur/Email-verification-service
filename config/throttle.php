@@ -6,4 +6,3 @@ return [
         'decay_minutes' => env('LOGIN_DECAY_MINUTES', 1),
     ],
 ];
-

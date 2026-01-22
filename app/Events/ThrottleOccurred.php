@@ -22,4 +22,3 @@ class ThrottleOccurred
         $this->ip = $ip;
     }
 }
-

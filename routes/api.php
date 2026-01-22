@@ -46,4 +46,3 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/integrations/hubspot/sync', [IntegrationController::class, 'syncHubspot']);
     Route::post('/webhooks/register', [WebhookController::class, 'register']);
 });
-

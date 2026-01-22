@@ -36,4 +36,3 @@ class VerifyEmailJobTest extends TestCase
         Mockery::close();
     }
 }
-

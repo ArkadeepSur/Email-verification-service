@@ -70,4 +70,3 @@ class VerificationController extends Controller
         return response()->json(['message' => 'Export queued']);
     }
 }
-

@@ -50,4 +50,3 @@ class NotifyOnThrottle
         return $next($request);
     }
 }
-
