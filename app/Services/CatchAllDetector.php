@@ -86,4 +86,22 @@ class CatchAllDetector
     {
         return bin2hex(random_bytes(5)).'@'.$domain;
     }
+
+    private function read($socket): string
+    {
+        $response = '';
+        while ($line = fgets($socket, 515)) {
+            $response .= $line;
+            if (preg_match('/^\d{3}\s/', $line)) {
+                break;
+            }
+        }
+
+        return trim($response);
+    }
+
+    private function write($socket, string $command): void
+    {
+        fwrite($socket, $command."\r\n");
+    }
 }
