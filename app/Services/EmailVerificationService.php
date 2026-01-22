@@ -23,7 +23,7 @@ class EmailVerificationService
             return ['ok' => false, 'reason' => 'Invalid email format'];
         }
 
-        [$local, $domain] = explode('@', $email, 2);
+        [, $domain] = explode('@', $email, 2);
 
         // Check basic DNS records for domain
         $records = dns_get_record($domain, DNS_ANY);
@@ -41,10 +41,15 @@ class EmailVerificationService
 
     public function checkMXRecords(string $email): array
     {
-        [$user, $domain] = explode('@', $email, 2);
-        $mx = [];
-        if (getmxrr($domain, $mx)) {
-            return $mx;
+        [, $domain] = explode('@', $email, 2);
+        $hosts = [];
+        $weights = [];
+        if (getmxrr($domain, $hosts, $weights)) {
+            // Normalize to associative format with 'target' and 'pri' keys
+            return array_map(fn ($host, $weight) => [
+                'target' => $host,
+                'pri' => (int) $weight,
+            ], $hosts, $weights);
         }
 
         return [];
@@ -52,8 +57,6 @@ class EmailVerificationService
 
     public function verifySMTP(string $email, array $mxRecords): array
     {
-        [$local, $domain] = explode('@', $email);
-
         // Normalize mxRecords: handle both getmxrr (string array) and dns_get_record (assoc array) formats
         $records = $this->normalizeMxRecords($mxRecords);
         if (empty($records)) {
@@ -184,20 +187,26 @@ class EmailVerificationService
 
     public function isDisposable(string $email): bool
     {
-        $disposableDomains = [
-            'tempmail.com',
-            '10minutemail.com',
-            'guerrillamail.com',
-            'mailinator.com',
-            'temp-mail.org',
-            'throwaway.email',
-            'yopmail.com',
-            'maildrop.cc',
-            'trashmail.com',
-            'fakeinbox.com',
-        ];
+        // Load from config/services for maintainability
+        $disposableDomains = config('services.email_verification.disposable_domains', []);
 
-        [$local, $domain] = explode('@', $email, 2);
+        // Fallback to a maintained list if config is not set
+        if (empty($disposableDomains)) {
+            $disposableDomains = [
+                'tempmail.com',
+                '10minutemail.com',
+                'guerrillamail.com',
+                'mailinator.com',
+                'temp-mail.org',
+                'throwaway.email',
+                'yopmail.com',
+                'maildrop.cc',
+                'trashmail.com',
+                'fakeinbox.com',
+            ];
+        }
+
+        [, $domain] = explode('@', $email, 2);
         $domain = strtolower($domain);
 
         return in_array($domain, $disposableDomains, true);
@@ -212,16 +221,16 @@ class EmailVerificationService
             return [];
         }
 
-        // Check if records are already in dns_get_record format (associative arrays with 'target')
+        // Check if records are already in the expected format (associative arrays with 'target' and 'pri')
         $firstRecord = reset($records);
-        if (is_array($firstRecord) && isset($firstRecord['target'])) {
+        if (is_array($firstRecord) && isset($firstRecord['target']) && isset($firstRecord['pri'])) {
             return $records; // Already normalized
         }
 
-        // Convert getmxrr format (array of hostnames) to normalized format
+        // If still receiving old format, convert it
         return array_map(fn ($host, $priority) => [
             'target' => $host,
-            'pri' => $priority,
+            'pri' => (int) $priority,
         ], $records, array_keys($records));
     }
 }

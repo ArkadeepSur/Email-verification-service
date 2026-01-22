@@ -93,6 +93,14 @@ class GoogleSheetsService
                 throw new \RuntimeException('Google Sheets client is not available');
             }
 
+            // Validate Google Sheets client is available
+            if (! class_exists('\\Google_Service_Sheets_ValueRange')) {
+                Log::warning('Google Sheets client not available, skipping export', [
+                    'spreadsheet_id' => $spreadsheetId,
+                ]);
+                throw new \RuntimeException('Google Sheets client (google/apiclient) is not installed');
+            }
+
             // Transform results into sheet row format
             $rows = [['Email', 'Status', 'Risk Score', 'SMTP', 'Catch All', 'Disposable']];
             foreach ($results as $result) {
@@ -101,11 +109,12 @@ class GoogleSheetsService
                     $result['status'] ?? '',
                     $result['risk_score'] ?? 0,
                     $result['smtp'] ?? '',
-                    $result['catch_all'] ? 'Yes' : 'No',
-                    $result['disposable'] ? 'Yes' : 'No',
+                    ($result['catch_all'] ?? false) ? 'Yes' : 'No',
+                    ($result['disposable'] ?? false) ? 'Yes' : 'No',
                 ];
             }
 
+            /** @var object $body */
             $body = new \Google_Service_Sheets_ValueRange;
             $body->setValues($rows);
 

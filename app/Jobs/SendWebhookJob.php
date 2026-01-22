@@ -54,7 +54,7 @@ class SendWebhookJob implements ShouldQueue
                 ]);
 
                 if ($this->attempts() < $this->tries) {
-                    $this->release($this->backoff * pow(2, $this->attempts() - 1));
+                    $this->release((int) $this->backoff());
                 } else {
                     Log::error('Webhook delivery failed after max retries', [
                         'url' => $this->url,
@@ -75,7 +75,7 @@ class SendWebhookJob implements ShouldQueue
             ]);
 
             if ($this->attempts() < $this->tries) {
-                $this->release($this->backoff * pow(2, $this->attempts() - 1));
+                $this->release((int) $this->backoff());
             } else {
                 Log::error('Webhook delivery failed after max retries with exception', [
                     'url' => $this->url,

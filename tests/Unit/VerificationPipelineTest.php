@@ -18,7 +18,8 @@ class VerificationPipelineTest extends TestCase
     /** @test */
     public function it_processes_email_verification_fully()
     {
-        // Fake queues and HTTP calls
+        // Fake events, queues and HTTP calls
+        Event::fake();
         Queue::fake();
         Http::fake();
 
@@ -26,6 +27,38 @@ class VerificationPipelineTest extends TestCase
         $user = User::factory()->create();
 
         $email = 'test@example.com';
+
+        // Mock EmailVerificationService to avoid network calls
+        $serviceMock = \Mockery::mock(\App\Services\EmailVerificationService::class);
+        $serviceMock
+            ->shouldReceive('precheck')
+            ->with($email)
+            ->andReturn(['ok' => true]);
+        $serviceMock
+            ->shouldReceive('validateSyntax')
+            ->with($email)
+            ->andReturn(true);
+        $serviceMock
+            ->shouldReceive('checkMXRecords')
+            ->with($email)
+            ->andReturn([['target' => 'mail.example.com', 'pri' => 10]]);
+        $serviceMock
+            ->shouldReceive('verifySMTP')
+            ->andReturn(['smtp' => 'valid', 'reason' => 'Mailbox accepted']);
+        $serviceMock
+            ->shouldReceive('detectCatchAll')
+            ->andReturn(false);
+        $serviceMock
+            ->shouldReceive('checkBlacklist')
+            ->andReturn(false);
+        $serviceMock
+            ->shouldReceive('isDisposable')
+            ->andReturn(false);
+        $serviceMock
+            ->shouldReceive('calculateRiskScore')
+            ->andReturn(5);
+
+        $this->app->instance(\App\Services\EmailVerificationService::class, $serviceMock);
 
         // Dispatch verification job (simulating pipeline)
         VerifyEmailJob::dispatch($user->id, $email);

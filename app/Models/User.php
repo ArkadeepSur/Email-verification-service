@@ -19,6 +19,10 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @method static self create(array $attributes = [])
+ * @method static self|null where(string $column, string $operator = null, $value = null)
+ * @method static self|null firstOrCreate(array $attributes, array $values = [])
  */
 class User extends Authenticatable
 {

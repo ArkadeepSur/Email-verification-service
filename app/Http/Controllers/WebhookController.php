@@ -44,7 +44,7 @@ class WebhookController extends Controller
     }
 
     /**
-     * Validate webhook URL for security.
+     * Validate webhook URL for security, including DNS resolution checks.
      */
     private function isValidWebhookUrl(string $url): bool
     {
@@ -69,10 +69,64 @@ class WebhookController extends Controller
                 if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
                     return false;
                 }
+            } else {
+                // It's a domain name, resolve it and validate the resolved IPs
+                if (! $this->validateResolvedIPs($host)) {
+                    return false;
+                }
             }
-            // If it's a domain name (not an IP), allow it to continue
         }
 
         return true;
+    }
+
+    /**
+     * Validate that a domain name resolves only to public IP addresses.
+     */
+    private function validateResolvedIPs(string $hostname): bool
+    {
+        try {
+            // Try dns_get_record first for A and AAAA records
+            $aRecords = @dns_get_record($hostname, DNS_A + DNS_AAAA);
+
+            if (empty($aRecords)) {
+                // Fallback to gethostbynamel
+                $ips = @gethostbynamel($hostname);
+                if (empty($ips) || ! is_array($ips)) {
+                    Log::warning('DNS resolution failed for webhook URL', ['hostname' => $hostname]);
+
+                    return false;
+                }
+            } else {
+                // Extract IPs from dns_get_record results
+                $ips = array_map(fn ($record) => $record['ip'] ?? null, $aRecords);
+                $ips = array_filter($ips);
+            }
+
+            // Limit number of resolved addresses to prevent DOS
+            if (count($ips) > 10) {
+                Log::warning('DNS resolution returned too many addresses', ['hostname' => $hostname, 'count' => count($ips)]);
+
+                return false;
+            }
+
+            // Validate each resolved IP
+            foreach ($ips as $ip) {
+                if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    Log::warning('Resolved IP is private or reserved', ['hostname' => $hostname, 'ip' => $ip]);
+
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('Error during DNS resolution for webhook URL', [
+                'hostname' => $hostname,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }
