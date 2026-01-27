@@ -32,11 +32,12 @@ RUN mkdir -p /app/storage/logs /app/bootstrap/cache && \
 RUN if [ ! -f .env ]; then cp .env.example .env; fi && \
     php artisan key:generate --force
 
-# Run migrations
-RUN php artisan migrate --force
+# Create entrypoint script
+RUN echo '#!/bin/sh\nset -e\nphp artisan migrate --force\nphp -S 0.0.0.0:${PORT:-8000} -t public' > /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
 
 # Expose port
 EXPOSE 8000
 
-# Start PHP server
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+# Start with migrations then PHP server
+CMD ["/app/entrypoint.sh"]
