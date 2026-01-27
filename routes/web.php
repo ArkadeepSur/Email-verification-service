@@ -1,6 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+
+
+Route::get('/health/db', function () {
+    DB::connection()->getPdo();
+    return 'DB CONNECTED';
+});
+
 
 Route::get('/', function () {
     return view('welcome');
