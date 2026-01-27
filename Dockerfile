@@ -33,8 +33,8 @@ RUN if [ ! -f .env ]; then cp .env.example .env; fi && \
     php artisan key:generate --force
 
 # Create entrypoint script
-RUN echo '#!/bin/sh\nset -e\nphp artisan migrate --force\nphp -S 0.0.0.0:${PORT:-8000} -t public' > /app/entrypoint.sh && \
-    chmod +x /app/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Expose port
 EXPOSE 8000
