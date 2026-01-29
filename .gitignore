@@ -2,6 +2,7 @@
 .DS_Store
 .env
 .env.backup
+.env.*.local
 .env.production
 .phpactor.json
 .phpunit.result.cache
@@ -16,8 +17,18 @@
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
-/storage/pail
+# Exclude all storage runtime files but preserve structure
+/storage/*
+!/storage/.gitkeep
+!/storage/app
+!/storage/framework
+!/storage/logs
+/storage/app/*
+!/storage/app/.gitkeep
+/storage/framework/*
+!/storage/framework/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
 /vendor
 Homestead.json
 Homestead.yaml
