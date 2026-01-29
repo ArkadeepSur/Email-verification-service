@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health/db', function () {
     // Restrict access to local environment only
     if (config('app.env') !== 'local') {
-        return response()->json(['error' => 'Unauthorized'], 403);
+        return response()->json(['error' => 'Forbidden'], 403);
     }
 
     try {
@@ -102,7 +102,7 @@ Route::post('/logout', [App\Http\Controllers\AuthController::class, 'webLogout']
 | Admin
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', \App\Http\Middleware\EnsureAdmin::class])
+Route::middleware(['auth', 'verified', \App\Http\Middleware\EnsureAdmin::class])
     ->prefix('admin')
     ->group(function () {
         Route::get('/throttles', [App\Http\Controllers\Admin\ThrottleController::class, 'index'])->name('admin.throttles');

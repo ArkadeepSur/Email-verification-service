@@ -15,6 +15,18 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                <p class="text-red-700">{{ session('error') }}</p>
+            </div>
+        @endif
+
+        @if ($errors->has('email'))
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                <p class="text-red-700">{{ $errors->first('email') }}</p>
+            </div>
+        @endif
+
         <div class="space-y-3">
             <form method="POST" action="{{ route('verification.send') }}">
                 @csrf

@@ -23,6 +23,7 @@ class AuthLoginFlowTest extends TestCase
         $user = User::factory()->create([
             'email' => 'test@example.com',
             'password' => bcrypt('password123'),
+            'email_verified_at' => now(), // Verified user goes to dashboard
         ]);
 
         $response = $this->post('/login', [
@@ -30,6 +31,7 @@ class AuthLoginFlowTest extends TestCase
             'password' => 'password123',
         ]);
 
+        $response->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
     }
 
