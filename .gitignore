@@ -20,9 +20,9 @@
 # Exclude all storage runtime files but preserve structure
 /storage/*
 !/storage/.gitkeep
-!/storage/app
-!/storage/framework
-!/storage/logs
+!/storage/app/
+!/storage/framework/
+!/storage/logs/
 /storage/app/*
 !/storage/app/.gitkeep
 /storage/framework/*

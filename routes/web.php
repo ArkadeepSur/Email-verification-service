@@ -12,9 +12,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/health/db', function () {
-    DB::connection()->getPdo();
+    // Restrict access to local environment only
+    if (config('app.env') !== 'local') {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
 
-    return 'DB CONNECTED';
+    try {
+        DB::connection()->getPdo();
+
+        return response()->json(['status' => 'connected'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'disconnected'], 503);
+    }
 });
 
 /*

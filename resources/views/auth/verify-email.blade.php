@@ -1,35 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Email Verification</title>
-</head>
-<body>
-    <h2>Verify your email address</h2>
+@extends('layouts.app')
 
-    <p>
-        Thanks for signing up! Before getting started, please verify your email
-        address by clicking the link we just emailed to you.
-    </p>
+@section('content')
+    <div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+        <h1 class="text-xl font-bold mb-4">Email Verification</h1>
 
-    @if (session('message'))
-        <p style="color: green;">
-            {{ session('message') }}
+        <p class="text-gray-600 mb-6">
+            Thanks for signing up! Before getting started, please verify your email
+            address by clicking the link we just emailed to you.
         </p>
-    @endif
 
-    <form method="POST" action="{{ route('verification.send') }}">
-        @csrf
-        <button type="submit">
-            Resend Verification Email
-        </button>
-    </form>
+        @if (session('message'))
+            <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                <p class="text-green-700">{{ session('message') }}</p>
+            </div>
+        @endif
 
-    <form method="POST" action="{{ route('logout') }}" style="margin-top: 10px;">
-        @csrf
-        <button type="submit">
-            Logout
-        </button>
-    </form>
-</body>
-</html>
+        <div class="space-y-3">
+            <form method="POST" action="{{ route('verification.send') }}">
+                @csrf
+                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Resend Verification Email
+                </button>
+            </form>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
+@endsection

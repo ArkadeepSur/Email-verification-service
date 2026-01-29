@@ -42,7 +42,7 @@ php artisan migrate --force
 npm run build
 
 # 6. Start queue worker (for background jobs)
-php artisan queue:work --daemon
+php artisan queue:work
 
 # 7. For production with Horizon (Redis)
 php artisan horizon  # or use supervisor config
