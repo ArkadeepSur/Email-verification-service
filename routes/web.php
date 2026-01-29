@@ -1,17 +1,19 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
 | Health Check
 |--------------------------------------------------------------------------
 */
+
 Route::get('/health/db', function () {
     DB::connection()->getPdo();
+
     return 'DB CONNECTED';
 });
 
@@ -56,11 +58,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
+
         return redirect('/dashboard');
     })->middleware('signed')->name('verification.verify');
 
     Route::post('/email/verification-notification', function (Request $request) {
         $request->user()->sendEmailVerificationNotification();
+
         return back()->with('message', 'Verification link sent!');
     })->middleware('throttle:6,1')->name('verification.send');
 });
@@ -102,11 +106,13 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureAdmin::class])
 | Local Dev Helper
 |--------------------------------------------------------------------------
 */
+
 if (env('APP_ENV') === 'local') {
     Route::get('/dev/login', function () {
         $user = App\Models\User::where('email', 'admin@example.com')->first();
         if ($user) {
             \Illuminate\Support\Facades\Auth::login($user);
+
             return redirect('/dashboard');
         }
 
