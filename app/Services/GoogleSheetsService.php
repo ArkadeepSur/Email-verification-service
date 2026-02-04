@@ -178,6 +178,35 @@ class GoogleSheetsService
      */
     protected function getGoogleClient()
     {
-        throw new \RuntimeException('Google client is not configured');
+        // Lazily create a Google API client if the google/apiclient package is installed
+        if (! class_exists('\Google_Client')) {
+            throw new \RuntimeException('Google client library (google/apiclient) is not installed');
+        }
+
+        $jsonEnv = env('GOOGLE_SHEETS_CREDENTIALS_JSON');
+        $pathEnv = env('GOOGLE_APPLICATION_CREDENTIALS');
+
+        $client = new \Google_Client();
+
+        if ($jsonEnv) {
+            $decoded = json_decode($jsonEnv, true);
+            if (! is_array($decoded)) {
+                throw new \RuntimeException('Invalid JSON provided in GOOGLE_SHEETS_CREDENTIALS_JSON');
+            }
+            $client->setAuthConfig($decoded);
+        } elseif ($pathEnv) {
+            $path = base_path($pathEnv);
+            if (! file_exists($path)) {
+                throw new \RuntimeException('GOOGLE_APPLICATION_CREDENTIALS file not found: ' . $pathEnv);
+            }
+            $client->setAuthConfig($path);
+        } else {
+            throw new \RuntimeException('Google Sheets credentials not configured. Set GOOGLE_SHEETS_CREDENTIALS_JSON or GOOGLE_APPLICATION_CREDENTIALS');
+        }
+
+        $client->addScope(\Google_Service_Sheets::SPREADSHEETS);
+        $client->setApplicationName(config('app.name', 'email-verification-service'));
+
+        return $client;
     }
 }

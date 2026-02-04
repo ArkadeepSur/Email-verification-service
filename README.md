@@ -7,8 +7,8 @@ A professional-grade Laravel-based REST API service for verifying email addresse
 ### Prerequisites
 - PHP 8.2+
 - Composer
+- MySQL 8.0+ or MariaDB 10.6+
 - Node.js 16+ (for Vite assets)
-- SQLite, MySQL, or PostgreSQL
 
 ### Installation 
 
@@ -129,7 +129,7 @@ app/
 | **Framework** | Laravel 12.44 |
 | **API** | REST with Sanctum authentication |
 | **Queue** | Database / Redis + Horizon |
-| **Database** | Eloquent ORM (SQLite/MySQL/PostgreSQL) |
+| **Database** | Eloquent ORM (MySQL/MariaDB) |
 | **Testing** | PHPUnit 11.5 + Mockery |
 | **Code Quality** | Laravel Pint + PHPStan |
 | **CI/CD** | GitHub Actions |
@@ -743,14 +743,13 @@ APP_KEY=base64:xxxxx
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 
-# Database
-DB_CONNECTION=sqlite           # or mysql, pgsql
-DB_DATABASE=database.sqlite
-# If using MySQL:
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_USERNAME=root
-# DB_PASSWORD=
+# Database (MySQL only)
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=email_verification_service
+DB_USERNAME=root
+DB_PASSWORD=
 
 # Queue
 QUEUE_CONNECTION=database      # or redis (production)
@@ -994,7 +993,7 @@ php artisan test --watch
 
 **Feature Tests** (`tests/Feature/`):
 - Test complete workflows
-- Use in-memory SQLite database
+- Use MySQL test database (`email_verification_test`)
 - Test job processing with `QUEUE_CONNECTION=sync`
 - Use `Bus::fake()`, `Http::fake()`, `Notification::fake()`
 
@@ -1028,12 +1027,50 @@ class VerifyEmailJobTest extends TestCase
 ### Test Gotchas
 
 - ✅ Tests use `QUEUE_CONNECTION=sync` (synchronous execution)
-- ✅ Tests use in-memory SQLite (fast, clean state)
+- ✅ Tests use MySQL test database (`email_verification_test`)
 - ✅ Mock external API calls with `Http::fake()`
 - ✅ Mock notifications with `Notification::fake()`
 - ✅ Mock queued jobs with `Bus::fake()`
 - ❌ Don't make real network calls in tests
 - ❌ Don't depend on `.env` file in tests
+
+### Google Sheets & HubSpot in tests
+
+- The `GoogleSheetsService` and `HubSpotService` will throw if the SDKs or credentials are not configured. For unit/feature tests, avoid making real network calls by stubbing or binding fakes.
+
+- Example fakes are provided in `tests/Helpers/GoogleSheetsFake.php` and `tests/Helpers/HubSpotFake.php`. Use Laravel's container helper to bind them in tests:
+
+```php
+use Tests\Helpers\GoogleSheetsFake;
+
+$fake = new GoogleSheetsFake([['test@example.com']]);
+$this->instance(App\Services\GoogleSheetsService::class, (object)['spreadsheets_values' => $fake->spreadsheets_values]);
+
+// For HubSpot
+use Tests\Helpers\HubSpotFake;
+$hubFake = new HubSpotFake([['properties' => ['email' => 'test@example.com']]]);
+$this->instance(App\Services\HubSpotService::class, $hubFake);
+```
+
+- If you prefer partial mocks, stub the protected client getters:
+
+```php
+$service = $this->partialMock(App\Services\GoogleSheetsService::class, function ($mock) use ($fake) {
+  $mock->shouldAllowMockingProtectedMethods()
+     ->shouldReceive('getGoogleClient')
+     ->andReturn((object)['spreadsheets_values' => $fake->spreadsheets_values]);
+});
+```
+
+- To run tests with real SDKs (not recommended in CI), install the SDKs and configure credentials in `.env`:
+
+```bash
+# Install SDKs (local dev)
+composer require google/apiclient hubspot/api-client
+
+# Or install dependencies declared in composer.json
+composer install
+```
 
 ---
 
@@ -1121,17 +1158,23 @@ php artisan queue:flush
 php artisan queue:work --tries=3
 ```
 
-### Database Locked (SQLite)
+### MySQL Connection Issues
 
-**Issue**: "database is locked" error
+**Issue**: "Can't connect to MySQL server" error
 
 **Solutions**:
 ```bash
-# Use MySQL or PostgreSQL for production
-# OR increase lock timeout in config/database.php
-'sqlite' => [
-    'timeout' => 20,
-],
+# Verify MySQL is running
+mysql -u root
+
+# Check credentials in .env
+# DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD
+
+# Create database if it doesn't exist
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS email_verification_service;"
+
+# Run migrations
+php artisan migrate --force
 ```
 
 ### SMTP Connection Failed

@@ -103,6 +103,22 @@ class HubSpotService
      */
     protected function getHubSpotClient()
     {
-        throw new \RuntimeException('HubSpot client is not configured');
+        // Create a HubSpot client if the hubspot/api-client package is available
+        if (class_exists('\HubSpot\Factory')) {
+            $accessToken = env('HUBSPOT_ACCESS_TOKEN');
+            $apiKey = env('HUBSPOT_API_KEY');
+
+            if ($accessToken) {
+                return \HubSpot\Factory::createWithAccessToken($accessToken);
+            }
+
+            if ($apiKey) {
+                return \HubSpot\Factory::createWithApiKey($apiKey);
+            }
+
+            throw new \RuntimeException('HubSpot credentials not configured. Set HUBSPOT_ACCESS_TOKEN or HUBSPOT_API_KEY');
+        }
+
+        throw new \RuntimeException('HubSpot client library (hubspot/api-client) is not installed');
     }
 }
