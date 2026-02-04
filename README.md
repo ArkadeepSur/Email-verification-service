@@ -993,7 +993,7 @@ php artisan test --watch
 
 **Feature Tests** (`tests/Feature/`):
 - Test complete workflows
-- Use MySQL test database (`email_verification_test`)
+- Use MySQL test database (`email_verification_service`)
 - Test job processing with `QUEUE_CONNECTION=sync`
 - Use `Bus::fake()`, `Http::fake()`, `Notification::fake()`
 
@@ -1027,7 +1027,7 @@ class VerifyEmailJobTest extends TestCase
 ### Test Gotchas
 
 - ✅ Tests use `QUEUE_CONNECTION=sync` (synchronous execution)
-- ✅ Tests use MySQL test database (`email_verification_test`)
+- ✅ Tests use MySQL test database (`email_verification_service`)
 - ✅ Mock external API calls with `Http::fake()`
 - ✅ Mock notifications with `Notification::fake()`
 - ✅ Mock queued jobs with `Bus::fake()`

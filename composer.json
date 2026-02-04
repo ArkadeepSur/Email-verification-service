@@ -7,11 +7,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
+        "google/apiclient": "^2.19",
+        "hubspot/api-client": "^13.2",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.2",
-        "laravel/tinker": "^2.10.1",
-        "google/apiclient": "^3.0",
-        "hubspot/api-client": "^7.0"
+        "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
