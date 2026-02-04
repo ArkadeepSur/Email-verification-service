@@ -186,7 +186,7 @@ class GoogleSheetsService
         $jsonEnv = env('GOOGLE_SHEETS_CREDENTIALS_JSON');
         $pathEnv = env('GOOGLE_APPLICATION_CREDENTIALS');
 
-        $client = new \Google_Client();
+        $client = new \Google_Client;
 
         if ($jsonEnv) {
             $decoded = json_decode($jsonEnv, true);
@@ -197,7 +197,7 @@ class GoogleSheetsService
         } elseif ($pathEnv) {
             $path = base_path($pathEnv);
             if (! file_exists($path)) {
-                throw new \RuntimeException('GOOGLE_APPLICATION_CREDENTIALS file not found: ' . $pathEnv);
+                throw new \RuntimeException('GOOGLE_APPLICATION_CREDENTIALS file not found: '.$pathEnv);
             }
             $client->setAuthConfig($path);
         } else {

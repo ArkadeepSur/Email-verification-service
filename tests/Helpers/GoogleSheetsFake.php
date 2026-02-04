@@ -8,7 +8,8 @@ class GoogleSheetsFake
 
     public function __construct(array $values = [])
     {
-        $this->spreadsheets_values = new class($values) {
+        $this->spreadsheets_values = new class($values)
+        {
             private $values;
 
             public function __construct($values)
@@ -18,7 +19,8 @@ class GoogleSheetsFake
 
             public function get($spreadsheetId, $range)
             {
-                return new class($this->values) {
+                return new class($this->values)
+                {
                     private $values;
 
                     public function __construct($values)

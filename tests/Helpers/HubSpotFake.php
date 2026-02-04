@@ -5,6 +5,7 @@ namespace Tests\Helpers;
 class HubSpotFake
 {
     private $contacts;
+
     public function __construct(array $contacts = [])
     {
         // normalize to contact shape used by HubSpotService
@@ -13,7 +14,8 @@ class HubSpotFake
 
     public function crm()
     {
-        return new class($this->contacts) {
+        return new class($this->contacts)
+        {
             private $contacts;
 
             public function __construct($contacts)
@@ -23,7 +25,8 @@ class HubSpotFake
 
             public function contacts()
             {
-                return new class($this->contacts) {
+                return new class($this->contacts)
+                {
                     private $contacts;
 
                     public function __construct($contacts)
