@@ -3,7 +3,9 @@
 namespace Tests\Unit;
 
 use App\Jobs\VerifyBulkEmailsJob;
-use Illuminate\Support\Facades\Bus;
+use App\Services\GoogleSheetsService;
+use Google\Service\Sheets;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
 
@@ -11,50 +13,33 @@ class GoogleSheetsServiceTest extends TestCase
 {
     public function test_import_emails_dispatches_job()
     {
-        Bus::fake();
+        Queue::fake();
 
-        $serviceMock = Mockery::mock(\App\Services\GoogleSheetsService::class)->makePartial();
+        $sheets = Mockery::mock(Sheets::class);
 
-        // Create a fake spreadsheets_values object that responds to get()
-        $fakeSpreadsheetValues = new class
-        {
-            public function get()
-            {
-                $fakeResponse = new class
-                {
-                    public function getValues()
-                    {
-                        return [['user@example.com'], ['not-an-email'], ['another@example.com']];
-                    }
-                };
+        $sheets->spreadsheets_values = Mockery::mock();
+        $sheets->spreadsheets_values
+            ->shouldReceive('get')
+            ->once()
+            ->with('spreadsheet-id', 'Sheet1!A:A')
+            ->andReturn((object) [
+                'values' => [
+                    ['email'],
+                    ['test@example.com'],
+                ],
+            ]);
 
-                return $fakeResponse;
-            }
-        };
+        $service = new GoogleSheetsService($sheets);
 
-        // Create a fake client with spreadsheets_values property
-        $fakeClient = new class($fakeSpreadsheetValues)
-        {
-            public $spreadsheets_values;
+        $service->importEmails(
+            'spreadsheet-id',
+            'Sheet1!A:A',
+            1
+        );
 
-            public function __construct($sv)
-            {
-                $this->spreadsheets_values = $sv;
-            }
-        };
-
-        $serviceMock->shouldAllowMockingProtectedMethods()
-            ->shouldReceive('getGoogleClient')
-            ->andReturn($fakeClient);
-
-        $this->app->instance(\App\Services\GoogleSheetsService::class, $serviceMock);
-
-        app(\App\Services\GoogleSheetsService::class)->importEmails('sheet', 'range', 1);
-
-        Bus::assertDispatched(VerifyBulkEmailsJob::class, function ($job) {
-            return is_array($job->emails) && in_array('user@example.com', $job->emails) && in_array('another@example.com', $job->emails);
+        Queue::assertPushed(VerifyBulkEmailsJob::class, function ($job) {
+            return $job->userId === 1
+                && $job->emails === ['test@example.com'];
         });
-
-        Mockery::close();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,12 +20,8 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @method static self create(array $attributes = [])
- * @method static self|null where(string $column, string $operator = null, $value = null)
- * @method static self|null firstOrCreate(array $attributes, array $values = [])
  */
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -45,41 +42,26 @@ class User extends Authenticatable
         'credits_balance' => 'integer',
     ];
 
-    /**
-     * Get the user's verification results.
-     */
     public function verificationResults(): HasMany
     {
         return $this->hasMany(VerificationResult::class);
     }
 
-    /**
-     * Get the user's credit transactions.
-     */
     public function creditTransactions(): HasMany
     {
         return $this->hasMany(CreditTransaction::class);
     }
 
-    /**
-     * Get the user's webhooks.
-     */
     public function webhooks(): HasMany
     {
         return $this->hasMany(Webhook::class);
     }
 
-    /**
-     * Check if user has enough credits.
-     */
     public function hasCredits(int $amount = 1): bool
     {
         return $this->credits_balance >= $amount;
     }
 
-    /**
-     * Deduct credits from user balance with row lock to prevent race conditions.
-     */
     public function deductCredits(int $amount = 1): bool
     {
         if (! $this->hasCredits($amount)) {
@@ -87,7 +69,6 @@ class User extends Authenticatable
         }
 
         return DB::transaction(function () use ($amount) {
-            // Re-fetch user with pessimistic lock to prevent concurrent modifications
             $user = User::where('id', $this->id)->lockForUpdate()->first();
             if (! $user || ! $user->hasCredits($amount)) {
                 return false;
@@ -108,13 +89,9 @@ class User extends Authenticatable
         });
     }
 
-    /**
-     * Add credits to user balance with row lock to prevent race conditions.
-     */
     public function addCredits(int $amount, string $description = 'Credit addition'): bool
     {
         return DB::transaction(function () use ($amount, $description) {
-            // Re-fetch user with pessimistic lock to prevent concurrent modifications
             $user = User::where('id', $this->id)->lockForUpdate()->first();
             if (! $user) {
                 return false;
