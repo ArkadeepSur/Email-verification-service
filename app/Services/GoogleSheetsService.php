@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use Google\Client;
-use Google\Service\Sheets;
 use App\Config\RetryConfig;
 use App\Jobs\VerifyBulkEmailsJob;
+use Google\Client;
+use Google\Service\Sheets;
 use Illuminate\Support\Facades\Log;
 
 class GoogleSheetsService
@@ -14,13 +14,12 @@ class GoogleSheetsService
 
     public function __construct(?Sheets $sheets = null)
     {
-        // ✅ Test path: injected mock
         if ($sheets !== null) {
             $this->sheets = $sheets;
+
             return;
         }
 
-        // ✅ Runtime path: real Google client
         $client = $this->createGoogleClient();
         $this->sheets = new Sheets($client);
     }
@@ -39,7 +38,6 @@ class GoogleSheetsService
 
         while ($attempt < RetryConfig::MAX_RETRIES) {
             try {
-                // ✅ ALWAYS use injected Sheets service
                 $response = $this->sheets
                     ->spreadsheets_values
                     ->get($spreadsheetId, $range);
@@ -48,7 +46,7 @@ class GoogleSheetsService
 
                 $emails = collect($values)
                     ->flatten()
-                    ->filter(fn ($v) => filter_var($v, FILTER_VALIDATE_EMAIL))
+                    ->filter(fn ($value) => filter_var($value, FILTER_VALIDATE_EMAIL))
                     ->unique()
                     ->values()
                     ->toArray();
@@ -81,9 +79,6 @@ class GoogleSheetsService
         throw new \RuntimeException('Google Sheets import failed after all retry attempts');
     }
 
-    /**
-     * Runtime-only Google client creation
-     */
     protected function createGoogleClient(): Client
     {
         if (! class_exists(Client::class)) {
@@ -93,19 +88,23 @@ class GoogleSheetsService
         $jsonEnv = env('GOOGLE_SHEETS_CREDENTIALS_JSON');
         $pathEnv = env('GOOGLE_APPLICATION_CREDENTIALS');
 
-        $client = new Client();
+        $client = new Client;
 
         if ($jsonEnv) {
             $decoded = json_decode($jsonEnv, true);
+
             if (! is_array($decoded)) {
                 throw new \RuntimeException('Invalid JSON in GOOGLE_SHEETS_CREDENTIALS_JSON');
             }
+
             $client->setAuthConfig($decoded);
         } elseif ($pathEnv) {
             $path = base_path($pathEnv);
+
             if (! file_exists($path)) {
                 throw new \RuntimeException("Credentials file not found: {$pathEnv}");
             }
+
             $client->setAuthConfig($path);
         } else {
             throw new \RuntimeException(

@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
+use App\Jobs\VerifyBulkEmailsJob;
+use App\Services\GoogleSheetsService;
+use Google\Service\Sheets;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
-use Illuminate\Support\Facades\Queue;
-use App\Services\GoogleSheetsService;
-use App\Jobs\VerifyBulkEmailsJob;
-use Google\Service\Sheets;
 
 class GoogleSheetsServiceTest extends TestCase
 {
@@ -15,10 +15,8 @@ class GoogleSheetsServiceTest extends TestCase
     {
         Queue::fake();
 
-        // Mock Sheets service
         $sheets = Mockery::mock(Sheets::class);
 
-        // Mock spreadsheets_values sub-resource
         $sheets->spreadsheets_values = Mockery::mock();
         $sheets->spreadsheets_values
             ->shouldReceive('get')
@@ -40,8 +38,8 @@ class GoogleSheetsServiceTest extends TestCase
         );
 
         Queue::assertPushed(VerifyBulkEmailsJob::class, function ($job) {
-            return $job->emails === ['test@example.com']
-                && $job->userId === 1;
+            return $job->userId === 1
+                && $job->emails === ['test@example.com'];
         });
     }
 }
